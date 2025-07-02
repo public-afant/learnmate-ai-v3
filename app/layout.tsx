@@ -15,6 +15,7 @@ const pretendard = localFont({
 export const metadata: Metadata = {
   title: "LearnMateAI V3",
 };
+export const dynamic = "force-dynamic"; // ✅ 쿠키 상태 반영
 
 export default function RootLayout({
   children,
@@ -22,8 +23,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${pretendard.variable}`}>
+    <html lang="en" className="hide-scrollbar">
+      <body className={` ${pretendard.variable}`}>
         <Header />
         {children}
         <Footer />

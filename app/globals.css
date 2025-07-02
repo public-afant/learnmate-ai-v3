@@ -24,3 +24,7 @@ body {
   color: var(--foreground);
   font-family: var(--font-pretendard);
 }
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}

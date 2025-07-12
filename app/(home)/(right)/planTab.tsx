@@ -6,7 +6,7 @@ export default function PlanTab() {
   const { selectedRoom } = useRoomStore();
   const plan = selectedRoom?.plan;
 
-  if (!plan) {
+  if (!plan || Object.keys(plan).length === 0) {
     return (
       <div className="p-6 text-gray-500 text-sm">학습 계획이 없습니다.</div>
     );
@@ -73,6 +73,20 @@ export default function PlanTab() {
               ))}
             </tbody>
           </table>
+        </div>
+      </div>
+      <div className="*:cursor-pointer flex justify-end">
+        <div
+          className="mr-3 bg-[#816eff] px-4 py-2 rounded-full text-white hover:bg-[#6B50FF]"
+          onClick={() => window.open("https://scholar.google.com/", "_blank")}
+        >
+          Scholar
+        </div>
+        <div
+          className="bg-[#816eff] px-4 py-2 rounded-full text-white hover:bg-[#6B50FF]"
+          onClick={() => window.open("https://library.taejae.ac.kr/", "_blank")}
+        >
+          TJ Library
         </div>
       </div>
     </div>

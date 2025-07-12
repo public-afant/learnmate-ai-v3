@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@import "tailwindcss/utilities";
+/* @import "tailwindcss/typography"; */
+@plugin "@tailwindcss/typography";
 
 :root {
   --background: #ffffff;

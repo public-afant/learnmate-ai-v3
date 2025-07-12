@@ -4,12 +4,15 @@ import { useState } from "react";
 import { useRightPanelStore } from "@/store/rightPanelStore";
 import PlanTab from "./(right)/planTab";
 import NoteTab from "./(right)/noteTab";
+import { useRoomStore } from "@/store/roomStore";
+import ChatTab from "./(right)/chatTab";
 
 export default function RightPanel() {
   const { showRight } = useRightPanelStore();
   const [rightWidth, setRightWidth] = useState(750);
   const [resizing, setResizing] = useState<"right" | null>(null);
   const [activeTab, setActiveTab] = useState<"plan" | "note" | "chat">("plan");
+  const { selectedRoom } = useRoomStore();
 
   const handleMouseDown = () => setResizing("right");
   const handleMouseUp = () => setResizing(null);
@@ -25,9 +28,9 @@ export default function RightPanel() {
   }
 
   const TABS = [
-    { key: "plan", label: "학습 계획서" },
-    { key: "note", label: "학습 노트" },
-    { key: "chat", label: "교수자 대화", badge: "99+" },
+    { key: "plan", label: "Study Plan" },
+    { key: "note", label: "Study Note" },
+    { key: "chat", label: "Chat", badge: "" },
   ];
 
   return (
@@ -72,9 +75,9 @@ export default function RightPanel() {
 
           {/* 탭 컨텐츠 */}
           <div className="flex-1 overflow-auto p-4 text-sm">
-            {activeTab === "plan" && <PlanTab />}
-            {activeTab === "note" && <NoteTab />}
-            {activeTab === "chat" && <div>💬 교수자와의 대화</div>}
+            {activeTab === "plan" && <PlanTab selectedRoom={selectedRoom} />}
+            {activeTab === "note" && <NoteTab selectedRoom={selectedRoom} />}
+            {activeTab === "chat" && <ChatTab selectedRoom={selectedRoom} />}
           </div>
         </div>
       )}

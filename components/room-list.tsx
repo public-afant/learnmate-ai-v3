@@ -1,44 +1,20 @@
 "use client";
 // import { createClient } from "@/utils/supabase/server";
 
-import { createClient } from "@/utils/supabase/client";
-import { useEffect, useState } from "react";
+// import { createClient } from "@/utils/supabase/client";
+// import { useEffect, useState } from "react";
 import { useRoomStore } from "@/store/roomStore";
-import Image from "next/image";
+// import Image from "next/image";
 
-const supabase = createClient();
+// const supabase = createClient();
 
-export default function RoomList({ token }) {
-  const [rooms, setRooms] = useState<any[]>([]);
-  const { setSelectedRoom } = useRoomStore();
-
-  const getRoomList = async () => {
-    const { data } = await supabase
-      .from("rooms")
-      .select()
-      .eq("fk_user_id", JSON.parse(token?.value ?? "").id)
-      .order("updated_at", { ascending: false });
-    return data;
-  };
-
-  // const getChats = async () => {};
-
-  useEffect(() => {
-    (async () => {
-      const fetchedRooms = await getRoomList();
-      setRooms(fetchedRooms ?? []);
-      if (fetchedRooms && fetchedRooms.length > 0) {
-        setSelectedRoom(fetchedRooms[0]); // ✅ 첫 방 자동 선택
-      }
-    })();
-  }, []);
-
+export default function RoomList({ rooms, getRoomList }) {
   return (
-    <div className="overflow-y-scroll h-full hide-scrollbar">
+    <div className="overflow-y-scroll h-full hide-scrollbar pb-20">
       {rooms?.map((item) => {
         return (
           <div key={item.id}>
-            <RoomItem item={item} />
+            <RoomItem item={item} getRoomList={getRoomList} />
             <div className="w-full h-[1px] bg-gray-100" />
           </div>
         );
@@ -52,14 +28,15 @@ function changeTime(time: { time: any }) {
   return formatted;
 }
 
-export function RoomItem({ item }: { item: any }) {
+export function RoomItem({ item, getRoomList }: { item: any }) {
   const { setSelectedRoom } = useRoomStore();
   //   console.log(item);
   return (
     <div
-      className="p-3 cursor-pointer hover:bg-gray-50 flex items-center"
+      className="p-3 cursor-pointer hover:bg-gray-50 flex items-center h-full"
       onClick={() => {
         setSelectedRoom(item);
+        getRoomList(false);
       }}
     >
       <div className="mr-2">

@@ -2,15 +2,24 @@ import { create } from "zustand";
 
 type Chat = {
   id: string;
-  title: string;
+  role: "user" | "assistant";
+  content: string;
+  fk_room_id: string;
+  created_at: string;
+  json: object;
 };
 
 type ChatStore = {
-  selectedChat: Chat | null;
-  setSelectedChat: (chat: Chat) => void;
+  selectedChat: Chat[];
+  setSelectedChat: (chatList: Chat[]) => void;
+  addChat: (chat: Chat) => void; // ⬅️ 추가
 };
 
 export const useChatStore = create<ChatStore>((set) => ({
-  selectedChat: null,
-  setSelectedChat: (chat) => set({ selectedChat: chat }),
+  selectedChat: [],
+  setSelectedChat: (chatList) => set({ selectedChat: chatList }),
+  addChat: (chat) =>
+    set((state) => ({
+      selectedChat: [...state.selectedChat, chat],
+    })),
 }));

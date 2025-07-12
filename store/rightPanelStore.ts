@@ -8,7 +8,7 @@ type RightPanelState = {
 };
 
 export const useRightPanelStore = create<RightPanelState>((set) => ({
-  showRight: true,
+  showRight: false,
   open: () => set({ showRight: true }),
   close: () => set({ showRight: false }),
 }));

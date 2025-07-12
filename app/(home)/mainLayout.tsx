@@ -1,5 +1,5 @@
 import ChatPanel from "./chatPanel";
-import LeftPanel from "./leftPanel";
+import LeftPanel from "./(left)/leftPanel";
 import RightPanel from "./rightPanel";
 
 export default function Layout() {

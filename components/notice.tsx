@@ -3,7 +3,7 @@ import Image from "next/image";
 
 export default function Notice() {
   return (
-    <div className="h-[60px]  min-w-xs flex items-center">
+    <div className="h-[60px]  min-w-xs flex items-center ml-10">
       <div className="w-3xl h-10 bg-gray-100 rounded-lg flex items-center">
         <Image
           src={"/ic-notice.png"}

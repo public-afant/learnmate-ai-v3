@@ -22,14 +22,10 @@ export default async function Header() {
               v3
             </span>
           </Link>
+          {!isLoginPage && <Notice />}
         </div>
 
-        {!isLoginPage && (
-          <>
-            <Notice />
-            <UserInfo />
-          </>
-        )}
+        {!isLoginPage && <UserInfo />}
       </div>
       <div className="w-full h-[1px] bg-gray-100" />
     </div>

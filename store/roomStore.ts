@@ -3,6 +3,11 @@ import { create } from "zustand";
 type Room = {
   id: string;
   title: string;
+  fk_user_id: string;
+  room_state: boolean;
+  thread_id: string;
+  state: number;
+  is_next: boolean;
 };
 
 type RoomStore = {

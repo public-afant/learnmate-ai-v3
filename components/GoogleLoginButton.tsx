@@ -50,8 +50,9 @@ const GoogleLoginButton = ({
           // 페이지 새로고침하여 로그인 상태 확인
           window.location.reload();
         }
-      } catch (error) {
+      } catch (e) {
         // 팝업이 다른 도메인으로 이동했을 때 발생하는 에러 무시
+        console.log(e);
       }
     }, 1000);
 

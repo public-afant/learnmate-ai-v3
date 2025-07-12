@@ -1,6 +1,6 @@
-import { login } from "@/app/login/actions";
+// import { login } from "@/app/login/actions";
 import { redirect } from "next/navigation";
-import { createClient } from "@/utils/supabase/server";
+// import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import LoginForm from "./loginForm";
 import Image from "next/image";
@@ -9,7 +9,7 @@ import GoogleLoginButton from "@/components/GoogleLoginButton";
 async function getUser() {
   const cookie = cookies();
   const authToken = (await cookie).get("auth_token");
-  
+
   if (authToken) {
     try {
       const user = JSON.parse(authToken.value);
@@ -24,7 +24,7 @@ async function getUser() {
 
 export default async function LoginPage() {
   const user = await getUser();
-  
+
   if (user) {
     redirect("/");
   }

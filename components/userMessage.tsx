@@ -1,7 +1,7 @@
 import formatChatTimestamp from "@/utils/formatChatTimestamp";
 
 export default function UserMessage({ item }) {
-  const { date, time } = formatChatTimestamp(item.created_at);
+  const { time } = formatChatTimestamp(item.created_at);
 
   return (
     <div className="flex justify-end mr-3 my-5 ">

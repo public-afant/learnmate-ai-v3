@@ -178,7 +178,7 @@ export function PlanModal({ json, setIsModal, setIsLoading }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {json.learning_plan.map((item: any) => (
+                  {json.learning_plan.map((item) => (
                     <tr key={item.week} className="align-top">
                       <td className="p-2 border font-medium text-gray-600">
                         Week{item.week}
@@ -186,7 +186,7 @@ export function PlanModal({ json, setIsModal, setIsLoading }) {
                       <td className="p-2 border">{item.inquiry_question}</td>
                       <td className="p-2 border whitespace-pre-line">
                         {item.reference_materials.map(
-                          (r: string, i: number) => `- ${r}\n`
+                          (r: string) => `- ${r}\n`
                         )}
                       </td>
                       <td className="p-2 border">{item.learning_activity}</td>

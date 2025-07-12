@@ -53,7 +53,7 @@ export default function RightPanel() {
             {TABS.map((tab) => (
               <button
                 key={tab.key}
-                onClick={() => setActiveTab(tab.key as any)}
+                onClick={() => setActiveTab(tab.key)}
                 className={`relative px-3 py-3 font-medium text-sm ${
                   activeTab === tab.key
                     ? "text-black font-semibold"

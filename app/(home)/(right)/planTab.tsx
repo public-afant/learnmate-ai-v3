@@ -57,7 +57,7 @@ export default function PlanTab({ selectedRoom }) {
               </tr>
             </thead>
             <tbody>
-              {plan.learning_plan.map((item: any) => (
+              {plan.learning_plan.map((item) => (
                 <tr key={item.week} className="align-top">
                   <td className="p-2 border font-medium text-gray-600">
                     Week{item.week}

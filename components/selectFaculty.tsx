@@ -22,7 +22,7 @@ export default function SelectFaculty({ setNextModal, handleGPT }) {
   }, []);
 
   const handleEvent = async (item) => {
-    const { data } = await supabase
+    await supabase
       .from("invite")
       .insert({
         fk_user_id: selectedRoom?.fk_user_id,

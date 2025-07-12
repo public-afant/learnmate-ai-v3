@@ -9,7 +9,7 @@ import axios from "axios";
 import { useState } from "react";
 
 export default function GptMessage({ item, setIsLoading }) {
-  const { date, time } = formatChatTimestamp(item.created_at);
+  const { time } = formatChatTimestamp(item.created_at);
   const [isModal, setIsModal] = useState(false);
   // console.log(item);
 
@@ -60,7 +60,7 @@ const supabase = createClient();
 
 export function PlanModal({ json, setIsModal, setIsLoading }) {
   const { selectedRoom, setSelectedRoom } = useRoomStore();
-  const { selectedChat } = useChatStore();
+  // const { selectedChat } = useChatStore();
   const { addChat } = useChatStore();
   const handleConfirm = async () => {
     // 1. 챗봇 3로 넘어가야함

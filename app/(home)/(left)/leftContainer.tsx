@@ -10,7 +10,7 @@ const supabase = createClient();
 
 export default function LeftContainer({ token }) {
   const [rooms, setRooms] = useState<any[]>([]);
-  const { selectedRoom, setSelectedRoom } = useRoomStore();
+  const { setSelectedRoom } = useRoomStore();
 
   async function getRoomList(state) {
     const { data } = await supabase

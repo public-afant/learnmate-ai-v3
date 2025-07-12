@@ -1,9 +1,9 @@
 "use client";
 
-import { useRoomStore } from "@/store/roomStore";
+// import { useRoomStore } from "@/store/roomStore";
 
-export default function PlanTab() {
-  const { selectedRoom } = useRoomStore();
+export default function PlanTab({ selectedRoom }) {
+  // const { selectedRoom } = useRoomStore();
   const plan = selectedRoom?.plan;
 
   if (!plan || Object.keys(plan).length === 0) {
@@ -64,9 +64,7 @@ export default function PlanTab() {
                   </td>
                   <td className="p-2 border">{item.inquiry_question}</td>
                   <td className="p-2 border whitespace-pre-line">
-                    {item.reference_materials.map(
-                      (r: string, i: number) => `- ${r}\n`
-                    )}
+                    {item.reference_materials.map((r: string) => `- ${r}\n`)}
                   </td>
                   <td className="p-2 border">{item.learning_activity}</td>
                 </tr>

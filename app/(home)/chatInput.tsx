@@ -69,7 +69,7 @@ export default function ChatInput({ setIsLoading }) {
   };
 
   const handleGPT = async (message, threadId, idx) => {
-    console.log(message, threadId, idx);
+    // console.log(message, threadId, idx);
     setIsLoading(true);
     const { data } = await axios.post(
       `${process.env.NEXT_PUBLIC_NODE_BASE_URL}/message`,

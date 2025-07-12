@@ -11,7 +11,7 @@ import { Placeholder } from "@tiptap/extension-placeholder";
 
 const supabase = createClient();
 
-export default function Editor({ content, setContent }) {
+export default function Editor({ content }) {
   //   const [debouncedContent] = useDebounce(content, 1000); // 1초 debounce
 
   const { selectedRoom, setSelectedRoom } = useRoomStore();

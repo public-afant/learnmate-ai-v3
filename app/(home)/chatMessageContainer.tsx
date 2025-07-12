@@ -5,7 +5,7 @@ import UserMessage from "@/components/userMessage";
 import { useChatStore } from "@/store/chatStore";
 import { useRoomStore } from "@/store/roomStore";
 import { createClient } from "@/utils/supabase/client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 export default function ChatMessageContainer({ isLoading, setIsLoading }) {
   const supabase = createClient();

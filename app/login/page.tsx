@@ -1,11 +1,31 @@
-import Image from "next/image";
-import { cookies } from "next/headers";
+import { login } from "@/app/login/actions";
 import { redirect } from "next/navigation";
+import { createClient } from "@/utils/supabase/server";
+import { cookies } from "next/headers";
 import LoginForm from "./loginForm";
+import Image from "next/image";
+import GoogleLoginButton from "@/components/GoogleLoginButton";
 
-export default async function Login() {
-  const token = (await cookies()).get("auth_token");
-  if (token) {
+async function getUser() {
+  const cookie = cookies();
+  const authToken = (await cookie).get("auth_token");
+  
+  if (authToken) {
+    try {
+      const user = JSON.parse(authToken.value);
+      return user;
+    } catch (error) {
+      console.error("Failed to parse auth token:", error);
+      return null;
+    }
+  }
+  return null;
+}
+
+export default async function LoginPage() {
+  const user = await getUser();
+  
+  if (user) {
     redirect("/");
   }
 
@@ -19,24 +39,13 @@ export default async function Login() {
             </div>
             <div className="text-3xl font-bold text-gray-600">LearnMate AI</div>
 
-            {<LoginForm />}
+            <LoginForm />
 
-            <div className="w-[22rem] h-12 mt-3 rounded-[10px] flex justify-center items-center cursor-pointer border-2 border-gray-100">
-              <Image
-                src={"/google_logo.png"}
-                alt="Google"
-                width={20}
-                height={20}
-                className="mr-1.5"
-              />
-              <span className="text-gray-600 font-semibold">
-                Google로 로그인하기
-              </span>
-            </div>
+            <GoogleLoginButton />
           </div>
           <div className="basis-1/2 flex justify-center items-center">
             <Image
-              src={"/login_right_img.png"}
+              src="/login_right_img.png"
               alt="Login"
               className="rounded-2xl"
               width={390}

@@ -7,7 +7,15 @@ import { useEffect, useState } from "react";
 
 const supabase = createClient();
 
-export default function SelectFaculty({ setNextModal, handleGPT }) {
+type SelectFacultyProps = {
+  setNextModal: (value: boolean) => void;
+  handleGPT: (chat: string, dummy: string, type: number) => void;
+};
+
+export default function SelectFaculty({
+  setNextModal,
+  handleGPT,
+}: SelectFacultyProps) {
   const [list, setList] = useState(null);
   const { selectedRoom, setSelectedRoom } = useRoomStore();
   const { selectedChat } = useChatStore();

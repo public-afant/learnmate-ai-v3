@@ -8,7 +8,24 @@ import { useRoomStore } from "@/store/roomStore";
 
 // const supabase = createClient();
 
-export default function RoomList({ rooms, getRoomList }) {
+type Room = {
+  id: string;
+  // 필요 시 다른 필드도 추가
+  fk_user_id: string;
+  room_state: boolean;
+  thread_id: string;
+  state: number;
+  is_next: boolean;
+  title: string;
+  updated_at: string;
+};
+
+type RoomListProps = {
+  rooms: Room[];
+  getRoomList: () => void; // 또는 Promise<void> 등
+};
+
+export default function RoomList({ rooms, getRoomList }: RoomListProps) {
   return (
     <div className="overflow-y-scroll h-full hide-scrollbar pb-20">
       {rooms?.map((item) => {
@@ -23,12 +40,28 @@ export default function RoomList({ rooms, getRoomList }) {
   );
 }
 
-function changeTime(time: { time: any }) {
+function changeTime(time: string) {
   const formatted = time.substring(0, 16).replace("T", " ");
   return formatted;
 }
 
-export function RoomItem({ item, getRoomList }: { item: any }) {
+type RoomItem = {
+  id: string;
+  title: string;
+  updated_at: string;
+  fk_user_id: string;
+  room_state: boolean;
+  thread_id: string;
+  state: number;
+  is_next: boolean;
+};
+
+type RoomItemProps = {
+  item: RoomItem;
+  getRoomList: (refresh: boolean) => void;
+};
+
+export function RoomItem({ item, getRoomList }: RoomItemProps) {
   const { setSelectedRoom } = useRoomStore();
   //   console.log(item);
   return (

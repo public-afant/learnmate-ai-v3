@@ -14,7 +14,7 @@ export default function Notice() {
         />
         <p className="mr-4 font-semibold text-[15px]">Notice</p>
         <p className="text-sm cursor-pointer hover:underline">
-          Watch out for Halushination!
+          Watch out for hallucination!
         </p>
       </div>
       {/* <LogoutButton /> */}

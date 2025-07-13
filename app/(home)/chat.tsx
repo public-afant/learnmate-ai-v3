@@ -48,6 +48,7 @@ export default function Chat() {
           <ChatInput />
         </>
       )} */}
+
       <ChatMessageContainer isLoading={isLoading} setIsLoading={setIsLoading} />
       <ChatInput setIsLoading={setIsLoading} />
     </>

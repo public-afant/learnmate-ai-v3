@@ -28,7 +28,7 @@ export default function ChatTab({ selectedRoom }) {
             <Image src={"/ic-approval.png"} width={400} height={100} alt="ic" />
           </div>
           <div className="font-bold text-[16px]">
-            &quot;An instructor has not been assigned yet.&quot;
+            &quot;Waiting for instructor matching to begin&quot;
           </div>
         </div>
       ) : (
@@ -36,7 +36,9 @@ export default function ChatTab({ selectedRoom }) {
           <div>
             <Image src={"/ic-approval.png"} width={400} height={100} alt="ic" />
           </div>
-          <div className="font-bold text-[16px]">&quot;Coming Soon!&quot;</div>
+          <div className="font-bold text-[16px]">
+            &quot;Waiting for the instructor to accept your request&quot;
+          </div>
         </div>
       )}
     </>

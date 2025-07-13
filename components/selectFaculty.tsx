@@ -21,7 +21,7 @@ export default function SelectFaculty({
   const { selectedChat } = useChatStore();
 
   async function getFaculty() {
-    const { data } = await supabase.from("faculty").select();
+    const { data } = await supabase.from("faculty").select().eq("state", true);
     setList(data);
   }
 
@@ -54,9 +54,9 @@ export default function SelectFaculty({
   };
 
   return (
-    <div className="fixed top-0 left-0 w-dvw h-dvh bg-black/40 z-10 flex justify-center items-center">
+    <div className="fixed top-0 left-0 w-screen h-screen bg-black/40 z-[1000] flex justify-center items-center">
       <div className="w-[300px] h-[300px] bg-white rounded-2xl p-7">
-        <div className="font-bold text-[18px]">Choose your faculty</div>
+        <div className="font-bold text-[18px]">Choose your instructor</div>
         <div className=" my-2 h-[180px] overflow-y-auto">
           {list !== null &&
             list.map((item) => {

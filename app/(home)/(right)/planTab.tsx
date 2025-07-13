@@ -78,7 +78,7 @@ export default function PlanTab({ selectedRoom }) {
           className="mr-3 bg-[#816eff] px-4 py-2 rounded-full text-white hover:bg-[#6B50FF]"
           onClick={() => window.open("https://scholar.google.com/", "_blank")}
         >
-          Scholar
+          Google Scholar
         </div>
         <div
           className="bg-[#816eff] px-4 py-2 rounded-full text-white hover:bg-[#6B50FF]"

@@ -158,9 +158,9 @@ export default function ChatInput({ setIsLoading }) {
   };
 
   return (
-    <div className="px-4 bg-[#F8FAFA]/0">
+    <div className="px-4 bg-[#F8FAFA]/0 mb-3">
       <div
-        className={`w-full border border-gray-300 rounded-xl px-3 py-2 flex flex-col ${
+        className={` w-full border border-gray-300 rounded-xl px-3 py-2 flex flex-col ${
           selectedRoom?.room_state ? "bg-white" : "bg-gray-200"
         }`}
       >

@@ -28,9 +28,9 @@ export default function RightPanel() {
   }
 
   const TABS = [
-    { key: "plan", label: "Study Plan" },
-    { key: "note", label: "Study Note" },
-    { key: "chat", label: "Chat", badge: "" },
+    { key: "plan", label: "Learning Plan" },
+    { key: "note", label: "Learning Note" },
+    { key: "chat", label: "Instructor Chat", badge: "" },
   ];
 
   return (
@@ -38,12 +38,12 @@ export default function RightPanel() {
       {showRight && (
         <div
           onMouseDown={handleMouseDown}
-          className="w-[1px] cursor-col-resize bg-gray-100"
+          className="w-[3px] cursor-col-resize bg-gray-100"
         />
       )}
       {showRight && (
         <div
-          className="relative pt-1 flex flex-col bg-white h-full mt-1"
+          className="relative pt-1 flex flex-col bg-white h-full mt-1 z-1"
           style={{ width: rightWidth }}
         >
           {/* <RightHeader /> */}
@@ -54,7 +54,7 @@ export default function RightPanel() {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`relative px-3 py-3 font-medium text-sm ${
+                className={`relative z-0 isolation-auto px-3 py-3 font-medium text-sm ${
                   activeTab === tab.key
                     ? "text-black font-semibold"
                     : "text-gray-400"

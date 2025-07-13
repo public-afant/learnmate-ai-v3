@@ -35,7 +35,7 @@ export default async function LoginPage() {
         <div className="bg-white w-[920px] h-[660px] min-w-[920px] min-h-[660px] rounded-3xl flex">
           <div className="basis-1/2 flex justify-center items-center flex-col">
             <div className="text-[#9383E9] font-semibold">
-              나만의 자기주도 학습
+              Self-Directed Learning
             </div>
             <div className="text-3xl font-bold text-gray-600">LearnMate AI</div>
 

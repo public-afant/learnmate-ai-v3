@@ -81,7 +81,7 @@ const GoogleLoginButton = ({
         className="mr-1.5"
       />
       <span className="text-gray-600 font-semibold">
-        {isLoading ? "로그인 중..." : "Google로 로그인하기"}
+        {isLoading ? "로그인 중..." : "Sign in with Google"}
       </span>
     </button>
   );

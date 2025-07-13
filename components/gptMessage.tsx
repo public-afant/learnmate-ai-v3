@@ -105,13 +105,17 @@ export function PlanModal({ json, setIsModal, setIsLoading }) {
       .single();
     setSelectedRoom(room);
 
-    const { data: result } = await supabase.from("chats").insert({
-      fk_user_id: selectedRoom?.fk_user_id,
-      fk_room_id: selectedRoom?.id,
-      message: data.assistant,
-      role: "assistant",
-      json: data.plan,
-    });
+    const { data: result } = await supabase
+      .from("chats")
+      .insert({
+        fk_user_id: selectedRoom?.fk_user_id,
+        fk_room_id: selectedRoom?.id,
+        message: data.assistant,
+        role: "assistant",
+        json: data.plan,
+      })
+      .select()
+      .single();
     addChat(result);
     setIsLoading(false);
   };

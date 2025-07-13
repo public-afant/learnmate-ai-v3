@@ -103,7 +103,7 @@ export default function ChatInput({ setIsLoading }) {
       // setThread(data.threadId);
       const { data: result } = await supabase
         .from("rooms")
-        .update({ thread_id: data.threadId, plan: data.plan })
+        .update({ thread_id: data.threadId })
         .eq("id", selectedRoom?.id)
         .select(`*,note(*)`)
         .single();

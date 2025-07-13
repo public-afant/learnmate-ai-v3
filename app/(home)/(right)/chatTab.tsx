@@ -37,7 +37,7 @@ export default function ChatTab({ selectedRoom }) {
             <Image src={"/ic-approval.png"} width={400} height={100} alt="ic" />
           </div>
           <div className="font-bold text-[16px]">
-            &quot;Waiting for the instructor to accept your request&quot;
+            Waiting for the instructor to accept your request
           </div>
         </div>
       )}

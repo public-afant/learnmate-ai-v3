@@ -4,7 +4,7 @@
 // import { createClient } from "@/utils/supabase/client";
 // import { useEffect, useState } from "react";
 import { useRoomStore } from "@/store/roomStore";
-// import Image from "next/image";
+import Image from "next/image";
 
 // const supabase = createClient();
 
@@ -72,16 +72,16 @@ export function RoomItem({ item, getRoomList }: RoomItemProps) {
         getRoomList(false);
       }}
     >
-      <div className="mr-2">
-        {/* <Image
-          src={`/ic-status-${item.state}.png`}
-          width={35}
-          height={35}
+      <div className="mr-3">
+        <Image
+          src={`/ic-state-${item.state}.png`}
+          width={40}
+          height={40}
           alt="state"
-        /> */}
+        />
       </div>
-      <div>
-        <div className="font-semibold text-sm">{item.title}</div>
+      <div className="flex flex-col max-w-[160px]">
+        <div className="font-semibold text-sm truncate">{item.title}</div>
         <div className="text-[12px] text-gray-400 font-semibold">
           {changeTime(item.updated_at)}
         </div>

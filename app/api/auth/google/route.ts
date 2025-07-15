@@ -5,9 +5,10 @@ import { cookies } from "next/headers";
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
-  
+
   if (!code) {
-    return new NextResponse(`
+    return new NextResponse(
+      `
       <html>
         <body>
           <script>
@@ -16,9 +17,11 @@ export async function GET(request: NextRequest) {
           </script>
         </body>
       </html>
-    `, {
-      headers: { 'Content-Type': 'text/html' }
-    });
+    `,
+      {
+        headers: { "Content-Type": "text/html" },
+      }
+    );
   }
 
   try {
@@ -38,9 +41,10 @@ export async function GET(request: NextRequest) {
     });
 
     const tokens = await tokenResponse.json();
-    
+
     if (!tokens.access_token) {
-      return new NextResponse(`
+      return new NextResponse(
+        `
         <html>
           <body>
             <script>
@@ -49,22 +53,28 @@ export async function GET(request: NextRequest) {
             </script>
           </body>
         </html>
-      `, {
-        headers: { 'Content-Type': 'text/html' }
-      });
+      `,
+        {
+          headers: { "Content-Type": "text/html" },
+        }
+      );
     }
 
     // 사용자 정보 가져오기
-    const userResponse = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
-      headers: {
-        Authorization: `Bearer ${tokens.access_token}`,
-      },
-    });
+    const userResponse = await fetch(
+      "https://www.googleapis.com/oauth2/v2/userinfo",
+      {
+        headers: {
+          Authorization: `Bearer ${tokens.access_token}`,
+        },
+      }
+    );
 
     const googleUser = await userResponse.json();
-    
+
     if (!googleUser.email) {
-      return new NextResponse(`
+      return new NextResponse(
+        `
         <html>
           <body>
             <script>
@@ -73,9 +83,11 @@ export async function GET(request: NextRequest) {
             </script>
           </body>
         </html>
-      `, {
-        headers: { 'Content-Type': 'text/html' }
-      });
+      `,
+        {
+          headers: { "Content-Type": "text/html" },
+        }
+      );
     }
 
     // Supabase에서 사용자 확인
@@ -87,7 +99,8 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (!user) {
-      return new NextResponse(`
+      return new NextResponse(
+        `
         <html>
           <body>
             <script>
@@ -96,15 +109,18 @@ export async function GET(request: NextRequest) {
             </script>
           </body>
         </html>
-      `, {
-        headers: { 'Content-Type': 'text/html' }
-      });
+      `,
+        {
+          headers: { "Content-Type": "text/html" },
+        }
+      );
     }
 
     // 쿠키에 사용자 정보 저장
     const tokenData = {
       id: user.id,
       name: user.name,
+      role: user.role,
       isGoogleLogin: true,
     };
 
@@ -124,7 +140,8 @@ export async function GET(request: NextRequest) {
     }
 
     // 팝업 닫기 및 부모 창 리다이렉션
-    return new NextResponse(`
+    return new NextResponse(
+      `
       <html>
         <body>
           <script>
@@ -137,13 +154,15 @@ export async function GET(request: NextRequest) {
           </script>
         </body>
       </html>
-    `, {
-      headers: { 'Content-Type': 'text/html' }
-    });
-
+    `,
+      {
+        headers: { "Content-Type": "text/html" },
+      }
+    );
   } catch (error) {
     console.error("Google OAuth error:", error);
-    return new NextResponse(`
+    return new NextResponse(
+      `
       <html>
         <body>
           <script>
@@ -152,8 +171,10 @@ export async function GET(request: NextRequest) {
           </script>
         </body>
       </html>
-    `, {
-      headers: { 'Content-Type': 'text/html' }
-    });
+    `,
+      {
+        headers: { "Content-Type": "text/html" },
+      }
+    );
   }
-} 
+}

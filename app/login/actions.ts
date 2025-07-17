@@ -20,6 +20,7 @@ export async function login(formData: FormData) {
   const tokenData = {
     id: data.id,
     name: data.name,
+    role: data.role,
   };
 
   // ✅ 쿠키 저장
@@ -29,7 +30,7 @@ export async function login(formData: FormData) {
     maxAge: 60 * 60 * 24, // 1일
   });
 
-  return { success: true };
+  return { success: true, role: data.role };
 }
 
 export async function googleLogin(formData: FormData) {
@@ -42,12 +43,13 @@ export async function googleLogin(formData: FormData) {
     .select()
     .eq("email", email)
     .single();
-  
+
   if (!data) return { error: "해당 이메일로 등록된 계정이 없습니다." };
 
   const tokenData = {
     id: data.id,
     name: data.name,
+    role: data.role,
     isGoogleLogin: true,
   };
 
@@ -58,5 +60,5 @@ export async function googleLogin(formData: FormData) {
     maxAge: 60 * 60 * 24, // 1일
   });
 
-  return { success: true };
+  return { success: true, role: data.role };
 }

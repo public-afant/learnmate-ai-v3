@@ -63,7 +63,6 @@ type RoomItemProps = {
 
 export function RoomItem({ item, getRoomList }: RoomItemProps) {
   const { setSelectedRoom } = useRoomStore();
-  //   console.log(item);
   return (
     <div
       className="p-3 cursor-pointer hover:bg-gray-50 flex items-center h-full"

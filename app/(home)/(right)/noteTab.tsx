@@ -25,7 +25,6 @@ export default function NoteTab({ selectedRoom }) {
       return;
     }
     getNote();
-    // console.log("state!!");
   }, [selectedRoom]);
 
   return (

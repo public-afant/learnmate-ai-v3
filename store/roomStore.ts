@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-type Room = {
+export type Room = {
   id: string;
   title: string;
   fk_user_id: string;

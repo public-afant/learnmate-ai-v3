@@ -15,7 +15,6 @@ export default function ChatTab({ selectedRoom }) {
       .eq("fk_room_id", selectedRoom.id)
       .single();
     setInvite(data);
-    // console.log(data);
   }
   useEffect(() => {
     getInvite();

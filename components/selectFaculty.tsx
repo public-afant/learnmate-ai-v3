@@ -16,12 +16,16 @@ export default function SelectFaculty({
   setNextModal,
   handleGPT,
 }: SelectFacultyProps) {
-  const [list, setList] = useState(null);
+  const [list, setList] = useState<any[] | null>(null);
   const { selectedRoom, setSelectedRoom } = useRoomStore();
   const { selectedChat } = useChatStore();
 
   async function getFaculty() {
-    const { data } = await supabase.from("faculty").select().eq("state", true);
+    const { data } = await supabase
+      .from("users")
+      .select()
+      .eq("role", "faculty")
+      .eq("state", true);
     setList(data);
   }
 
@@ -29,13 +33,14 @@ export default function SelectFaculty({
     getFaculty();
   }, []);
 
-  const handleEvent = async (item) => {
+  const handleEvent = async (item: any) => {
     await supabase
       .from("invite")
       .insert({
         fk_user_id: selectedRoom?.fk_user_id,
         fk_room_id: selectedRoom?.id,
         fk_faculty_id: item.id,
+        fk_user_faculty_id: item.id,
       })
       .select()
       .single();
@@ -59,7 +64,7 @@ export default function SelectFaculty({
         <div className="font-bold text-[18px]">Choose your instructor</div>
         <div className=" my-2 h-[180px] overflow-y-auto">
           {list !== null &&
-            list.map((item) => {
+            list.map((item: any) => {
               return (
                 <div
                   className="cursor-pointer hover:bg-gray-100 p-1"

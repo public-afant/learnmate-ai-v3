@@ -19,8 +19,6 @@ export default function ChatInput({ setIsLoading }) {
   const { selectedRoom, setSelectedRoom } = useRoomStore();
   const { addChat } = useChatStore();
 
-  // console.log(selectedRoom);
-
   useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
@@ -34,8 +32,6 @@ export default function ChatInput({ setIsLoading }) {
     // setThread(selectedRoom?.thread_id ?? "");
     // setIsNext(selectedRoom?.is_next ?? false);
   }, []);
-
-  // console.log(selectedRoom);
 
   const handleSend = async () => {
     if (!selectedRoom?.room_state || !message.trim()) return;
@@ -62,14 +58,11 @@ export default function ChatInput({ setIsLoading }) {
 
     if (data) {
       addChat(data); // ✅ 상태에 직접 추가하여 채팅창에 즉시 반영
-      console.log("1:", selectedRoom.thread_id);
-      console.log("2:", selectedRoom?.thread_id);
       handleGPT(content, selectedRoom.thread_id, selectedRoom.state);
     }
   };
 
   const handleGPT = async (message, threadId, idx) => {
-    // console.log(message, threadId, idx);
     setIsLoading(true);
     const { data } = await axios.post(
       `${process.env.NEXT_PUBLIC_NODE_BASE_URL}/message`,
@@ -80,9 +73,7 @@ export default function ChatInput({ setIsLoading }) {
       }
     );
 
-    // console.log("##", data);
     if (data.isNext) {
-      // console.log("##");
       const { data: updateResult } = await supabase
         .from("rooms")
         .update({ is_next: data.isNext })
@@ -94,43 +85,25 @@ export default function ChatInput({ setIsLoading }) {
     }
 
     if (threadId === "") {
-      console.log(
-        "1. thread ID : ",
-        selectedRoom?.thread_id,
-        "  Data: ",
-        data.threadId
-      );
-      // setThread(data.threadId);
       const { data: result } = await supabase
         .from("rooms")
         .update({ thread_id: data.threadId })
         .eq("id", selectedRoom?.id)
         .select(`*,note(*)`)
         .single();
-      console.log(" 1. result : ", result);
 
       setSelectedRoom(result);
     }
     // else {
-    //   console.log(
-    //     "2. thread ID : ",
-    //     selectedRoom?.thread_id,
-    //     "  Data: ",
-    //     data.threadId
-    //   );
-    //   // setThread(data.threadId);
     //   const { data: result1 } = await supabase
     //     .from("rooms")
     //     .update({ plan: data.plan })
     //     .eq("id", selectedRoom?.id)
     //     .select(`*,note(*)`)
     //     .single();
-    //   console.log("2. result : ", result1);
 
     //   setSelectedRoom(result1);
     // }
-
-    // console.log(data);
 
     const { data: gptData } = await supabase
       .from("chats")

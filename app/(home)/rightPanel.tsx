@@ -5,13 +5,13 @@ import { useRightPanelStore } from "@/store/rightPanelStore";
 import PlanTab from "./(right)/planTab";
 import NoteTab from "./(right)/noteTab";
 import { useRoomStore } from "@/store/roomStore";
-import ChatTab from "./(right)/chatTab";
+import InstructorChatTab from "./(right)/instructorChatTab";
 
 export default function RightPanel() {
   const { showRight } = useRightPanelStore();
   const [rightWidth, setRightWidth] = useState(750);
   const [resizing, setResizing] = useState<"right" | null>(null);
-  const [activeTab, setActiveTab] = useState<"plan" | "note" | "chat">("plan");
+  const [activeTab, setActiveTab] = useState<string>("plan");
   const { selectedRoom } = useRoomStore();
 
   const handleMouseDown = () => setResizing("right");
@@ -29,7 +29,7 @@ export default function RightPanel() {
 
   const TABS = [
     { key: "plan", label: "Learning Plan" },
-    { key: "note", label: "Learning Note" },
+    { key: "note", label: "Learning Notes" },
     { key: "chat", label: "Instructor Chat", badge: "" },
   ];
 
@@ -77,7 +77,9 @@ export default function RightPanel() {
           <div className="flex-1 overflow-auto p-4 text-sm">
             {activeTab === "plan" && <PlanTab selectedRoom={selectedRoom} />}
             {activeTab === "note" && <NoteTab selectedRoom={selectedRoom} />}
-            {activeTab === "chat" && <ChatTab selectedRoom={selectedRoom} />}
+            {activeTab === "chat" && (
+              <InstructorChatTab selectedRoom={selectedRoom ?? undefined} />
+            )}
           </div>
         </div>
       )}

@@ -8,7 +8,6 @@ export const dynamic = "force-dynamic";
 export default async function Header() {
   const path = (await headers()).get("x-pathname") || ""; // Next.js 15에서 유효
   const isLoginPage = path.startsWith("/login");
-  console.log(isLoginPage);
 
   return (
     <div className="h-[60px]">

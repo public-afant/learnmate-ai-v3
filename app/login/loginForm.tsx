@@ -15,7 +15,13 @@ export default function LoginForm() {
 
     const res = await login(formData);
     if (res?.success) {
-      router.push("/");
+      if (res?.role === "faculty") {
+        router.push("/faculty");
+      } else if (res?.role === "admin") {
+        router.push("/admin");
+      } else {
+        router.push("/");
+      }
     } else {
       alert("인증 실패!");
     }

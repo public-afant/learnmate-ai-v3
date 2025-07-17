@@ -11,10 +11,8 @@ import { useState } from "react";
 export default function GptMessage({ item, setIsLoading }) {
   const { time } = formatChatTimestamp(item.created_at);
   const [isModal, setIsModal] = useState(false);
-  // console.log(item);
 
   const { message } = FilterJson(item.message);
-  // console.log(item.json);
 
   return (
     <div className="flex justify-start mr-10 my-5">
@@ -77,7 +75,6 @@ export function PlanModal({ json, setIsModal, setIsLoading }) {
       .eq("id", selectedRoom?.id)
       .select(`*,note(*)`)
       .single();
-    console.log("$$$", data, error);
 
     setSelectedRoom(data);
     setIsModal(false);

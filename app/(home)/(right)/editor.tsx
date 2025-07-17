@@ -61,7 +61,6 @@ export default function Editor({ content }) {
       if (!debouncedContent) return;
       setStatus("saving");
       try {
-        console.log("✅ 자동 저장됨:", debouncedContent);
         // await new Promise((res) => setTimeout(res, 500));
 
         if (selectedRoom?.note.length === 0) {

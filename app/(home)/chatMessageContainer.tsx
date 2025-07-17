@@ -52,7 +52,6 @@ export default function ChatMessageContainer({ isLoading, setIsLoading }) {
       className="flex-1 overflow-y-auto px-4 py-2 space-y-2 max-h-[calc(100vh-235px)] hide-scrollbar"
     >
       {selectedChat?.map((item) => {
-        // console.log(item);
         return item?.role === "user" ? (
           <UserMessage key={item.id} item={item} />
         ) : item?.role === "assistant" ? (

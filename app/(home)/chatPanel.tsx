@@ -1,5 +1,6 @@
-import Chat from "./chat";
 import ChatHeader from "./chatHeader";
+import ChatMessageContainer from "./chatMessageContainer";
+import ChatInput from "./chatInput";
 
 export default function ChatPanel() {
   return (
@@ -9,10 +10,17 @@ export default function ChatPanel() {
         <ChatHeader />
       </div>
       {/* 중앙 정렬된 본문 영역 */}
-      <div className="flex flex-col flex-1 items-center justify-end w-full  bg-[#F8FAFA]">
-        <div className="w-full max-w-full flex flex-col flex-1 overflow-hidden">
-          {/* 메시지 영역 */}
-          <Chat />
+      <div className="flex flex-col flex-1 items-center justify-end w-full bg-[#F8FAFA] min-h-0">
+        <div className="w-full max-w-full flex flex-col flex-1 min-h-0 overflow-hidden">
+          {/* 메시지 영역 + 입력창을 flex로 분리, InstructorChatTab과 동일하게 */}
+          <div className="flex flex-col flex-1 min-h-0 p-1 gap-3">
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              <ChatMessageContainer />
+            </div>
+            <div className="flex-shrink-0 mt-0">
+              <ChatInput />
+            </div>
+          </div>
         </div>
       </div>
     </div>

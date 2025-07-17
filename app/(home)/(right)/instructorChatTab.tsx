@@ -177,7 +177,7 @@ export default function InstructorChatTab({
               return (
                 <div
                   key={chat.id}
-                  className={`flex items-end gap-1 ${
+                  className={`flex items-end gap-1 my-2 ${
                     isStudent ? "justify-end" : "justify-start"
                   }`}
                 >

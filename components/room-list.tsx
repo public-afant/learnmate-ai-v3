@@ -76,6 +76,7 @@ export function RoomItem({ item, getRoomList }: RoomItemProps) {
           src={`/ic-state-${item.state}.png`}
           width={40}
           height={40}
+          style={{ width: 40, height: 40 }}
           alt="state"
         />
       </div>

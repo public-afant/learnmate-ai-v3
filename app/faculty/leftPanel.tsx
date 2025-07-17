@@ -197,6 +197,7 @@ export default function LeftPanel({ userId }: LeftPanelProps) {
                         src={`/ic-state-${room.state ?? 1}.png`}
                         width={40}
                         height={40}
+                        style={{ width: 40, height: 40 }}
                         alt="state"
                         className="rounded"
                       />

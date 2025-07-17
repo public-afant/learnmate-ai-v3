@@ -15,7 +15,7 @@ export default function Layout({ userId }: LayoutProps) {
       <div className="w-[1px] bg-gray-100" />
 
       {/* Chat Panel */}
-      <div className="flex-1 h-full">
+      <div className="flex-1 h-full bg-[#F8FAFA]">
         <ChatPanel userId={userId} />
       </div>
 

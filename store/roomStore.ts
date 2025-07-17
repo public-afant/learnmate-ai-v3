@@ -8,6 +8,7 @@ export type Room = {
   thread_id: string;
   state: number;
   is_next: boolean;
+  isChallenge: boolean;
 };
 
 type RoomStore = {

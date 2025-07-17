@@ -1,8 +1,12 @@
+"use client";
+import { useState } from "react";
 import ChatHeader from "./chatHeader";
 import ChatMessageContainer from "./chatMessageContainer";
 import ChatInput from "./chatInput";
 
 export default function ChatPanel() {
+  const [isLoading, setIsLoading] = useState(false);
+
   return (
     <div className="relative h-full flex flex-col pt-1 items-center">
       {/* 헤더는 전체 폭 */}
@@ -15,10 +19,13 @@ export default function ChatPanel() {
           {/* 메시지 영역 + 입력창을 flex로 분리, InstructorChatTab과 동일하게 */}
           <div className="flex flex-col flex-1 min-h-0 p-1 gap-3">
             <div className="flex-1 min-h-0 overflow-y-auto">
-              <ChatMessageContainer />
+              <ChatMessageContainer
+                isLoading={isLoading}
+                setIsLoading={setIsLoading}
+              />
             </div>
             <div className="flex-shrink-0 mt-0">
-              <ChatInput />
+              <ChatInput setIsLoading={setIsLoading} />
             </div>
           </div>
         </div>

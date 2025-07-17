@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRightPanelStore } from "@/store/rightPanelStore";
 import PlanTab from "./(right)/planTab";
 import NoteTab from "./(right)/noteTab";
@@ -16,16 +16,22 @@ export default function RightPanel() {
 
   const handleMouseDown = () => setResizing("right");
   const handleMouseUp = () => setResizing(null);
-  const handleMouseMove = (e: MouseEvent) => {
-    if (resizing === "right") {
-      setRightWidth(Math.max(280, window.innerWidth - e.clientX));
-    }
-  };
 
-  if (typeof window !== "undefined") {
-    window.onmousemove = handleMouseMove;
-    window.onmouseup = handleMouseUp;
-  }
+  useEffect(() => {
+    if (!showRight) return;
+    const handleMouseMove = (e: MouseEvent) => {
+      if (resizing === "right") {
+        setRightWidth(Math.max(280, window.innerWidth - e.clientX));
+      }
+    };
+    const handleMouseUp = () => setResizing(null);
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [resizing, showRight]);
 
   const TABS = [
     { key: "plan", label: "Learning Plan" },
@@ -36,10 +42,14 @@ export default function RightPanel() {
   return (
     <>
       {showRight && (
-        <div
-          onMouseDown={handleMouseDown}
-          className="w-[3px] cursor-col-resize bg-gray-100"
-        />
+        <div className="relative h-full">
+          <div
+            onMouseDown={handleMouseDown}
+            className="absolute left-0 top-0 h-full w-8 cursor-col-resize z-10"
+            style={{ background: "transparent" }}
+          />
+          <div className="w-[3px] h-full bg-gray-100" />
+        </div>
       )}
       {showRight && (
         <div

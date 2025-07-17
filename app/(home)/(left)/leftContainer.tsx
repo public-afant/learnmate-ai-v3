@@ -31,6 +31,12 @@ export default function LeftContainer({ token }) {
 
   useEffect(() => {
     getRoomList(true);
+
+    const handler = () => getRoomList(true);
+    window.addEventListener("refreshRooms", handler);
+    return () => {
+      window.removeEventListener("refreshRooms", handler);
+    };
   }, []);
 
   // useEffect(() => {

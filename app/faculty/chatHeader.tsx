@@ -13,7 +13,7 @@ export default function ChatHeader() {
         {selectedRoom?.title}
       </h1>
       {showRight ? (
-        <div onClick={close}>
+        <div onClick={close} className="cursor-pointer">
           <Image
             src={"/ic-fullscreen-1.png"}
             width={20}
@@ -22,7 +22,7 @@ export default function ChatHeader() {
           />
         </div>
       ) : (
-        <div onClick={open}>
+        <div onClick={open} className="cursor-pointer">
           <Image src={"/ic-sidebar.png"} width={22} height={22} alt="sidebar" />
         </div>
       )}

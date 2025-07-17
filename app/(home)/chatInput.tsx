@@ -58,6 +58,11 @@ export default function ChatInput({ setIsLoading }) {
 
     if (data) {
       addChat(data); // ✅ 상태에 직접 추가하여 채팅창에 즉시 반영
+      // rooms 테이블 updated_at 갱신
+      await supabase
+        .from("rooms")
+        .update({ updated_at: new Date().toISOString() })
+        .eq("id", selectedRoom.id);
       handleGPT(content, selectedRoom.thread_id, selectedRoom.state);
     }
   };
@@ -72,6 +77,8 @@ export default function ChatInput({ setIsLoading }) {
         type: idx,
       }
     );
+
+    console.log(data);
 
     if (data.isNext) {
       const { data: updateResult } = await supabase
@@ -152,17 +159,33 @@ export default function ChatInput({ setIsLoading }) {
         />
 
         <div className="flex justify-between">
-          <div
-            onClick={() => {
-              if (selectedRoom?.is_next) setNextModal(true);
-            }}
-            className={`text-sm px-3 py-1 rounded-xl ${
-              selectedRoom?.is_next
-                ? "bg-[#816eff] hover:bg-[#6B50FF] text-white cursor-pointer"
-                : "bg-gray-400 text-gray-200 cursor-not-allowed"
-            }`}
-          >
-            Next
+          <div className="flex gap-2">
+            {selectedRoom?.is_next && (
+              <div
+                onClick={() => {
+                  if (selectedRoom?.is_next) {
+                    if (selectedRoom.state === 1) {
+                      setNextModal(true);
+                      // console.log("1");
+                    } else if (selectedRoom.state === 2) {
+                      // console.log("2");
+                    }
+                  }
+                }}
+                className={`text-sm px-3 py-1 rounded-xl ${
+                  selectedRoom?.is_next
+                    ? "bg-[#816eff] hover:bg-[#6B50FF] text-white cursor-pointer"
+                    : "bg-gray-400 text-gray-200 cursor-not-allowed"
+                }`}
+              >
+                Next
+              </div>
+            )}
+            {/* {selectedRoom?.state === 3 && (
+              <div className="text-sm px-3 py-1 rounded-xl bg-[#816eff] hover:bg-[#6B50FF] text-white cursor-pointer">
+                🔥 Challenge Mode
+              </div>
+            )} */}
           </div>
           <div
             onClick={handleSend}

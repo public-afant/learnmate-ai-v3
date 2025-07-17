@@ -78,6 +78,7 @@ export function PlanModal({ json, setIsModal, setIsLoading }) {
 
     setSelectedRoom(data);
     setIsModal(false);
+    window.dispatchEvent(new Event("refreshRooms"));
     handleGPT(json, "", 3);
 
     // 3. 선택방 초기화 -> 플랜 탭 확인
@@ -114,6 +115,11 @@ export function PlanModal({ json, setIsModal, setIsLoading }) {
       .select()
       .single();
     addChat(result);
+    // rooms 테이블 updated_at 갱신
+    await supabase
+      .from("rooms")
+      .update({ updated_at: new Date().toISOString() })
+      .eq("id", selectedRoom?.id);
     setIsLoading(false);
   };
 

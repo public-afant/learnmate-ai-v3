@@ -27,6 +27,7 @@ export default function RootLayout({
       <body className={` ${pretendard.variable}`}>
         <Header />
         {children}
+
         <Footer />
       </body>
     </html>

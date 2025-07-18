@@ -3,6 +3,7 @@
 import SelectFaculty from "@/components/selectFaculty";
 import { useChatStore } from "@/store/chatStore";
 import { useRoomStore } from "@/store/roomStore";
+import { useReplyStore } from "@/store/replyStore";
 import { createClient } from "@/utils/supabase/client";
 import axios from "axios";
 import { useState, useRef, useEffect } from "react";
@@ -18,6 +19,7 @@ export default function ChatInput({ setIsLoading }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { selectedRoom, setSelectedRoom } = useRoomStore();
   const { addChat } = useChatStore();
+  const { referencedMessage, clearReferencedMessage } = useReplyStore();
 
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -47,6 +49,7 @@ export default function ChatInput({ setIsLoading }) {
         fk_room_id: selectedRoom.id,
         role: "user",
         message: content,
+        referenced_message_id: referencedMessage?.id || null,
       })
       .select()
       .single();
@@ -58,6 +61,7 @@ export default function ChatInput({ setIsLoading }) {
 
     if (data) {
       addChat(data); // ✅ 상태에 직접 추가하여 채팅창에 즉시 반영
+      clearReferencedMessage(); // 참조 메시지 초기화
       // rooms 테이블 updated_at 갱신
       await supabase
         .from("rooms")
@@ -139,6 +143,36 @@ export default function ChatInput({ setIsLoading }) {
 
   return (
     <div className="px-4 bg-[#F8FAFA]/0 mb-3">
+      {/* 참조 메시지 표시 영역 */}
+      {referencedMessage && (
+        <div className="mb-2 p-3 bg-gray-100 rounded-lg border-l-4 border-blue-500">
+          <div className="flex justify-between items-start mb-1">
+            <span className="text-xs text-gray-600 font-medium">
+              참조: {referencedMessage.role === "user" ? "Student" : "Faculty"}
+            </span>
+            <button
+              onClick={clearReferencedMessage}
+              className="text-xs text-gray-500 hover:text-gray-700"
+            >
+              ✕
+            </button>
+          </div>
+          <div className="text-sm text-gray-700 line-clamp-2">
+            {referencedMessage.message}
+          </div>
+          <button
+            onClick={() => {
+              if ((window as any).scrollToGptMessage) {
+                (window as any).scrollToGptMessage(referencedMessage.id);
+              }
+            }}
+            className="text-xs text-blue-500 hover:text-blue-700 mt-1"
+          >
+            원본 보기
+          </button>
+        </div>
+      )}
+
       <div
         className={` w-full border border-gray-300 rounded-xl px-3 py-2 flex flex-col ${
           selectedRoom?.room_state ? "bg-white" : "bg-gray-200"

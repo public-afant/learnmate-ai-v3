@@ -4,6 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import ChatHeader from "./chatHeader";
 import { createClient } from "@/utils/supabase/client";
 import { useRoomStore } from "@/store/roomStore";
+import { useReplyStore } from "@/store/replyStore";
 import Image from "next/image";
 
 function Chat() {
@@ -17,6 +18,7 @@ function Chat() {
 
 function ChatInput({ facultyId }: { facultyId: string }) {
   const { selectedRoom } = useRoomStore();
+  const { referencedMessage, clearReferencedMessage } = useReplyStore();
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -45,8 +47,10 @@ function ChatInput({ facultyId }: { facultyId: string }) {
       sender_role: "faculty",
       message,
       created_at: new Date(),
+      referenced_message_id: referencedMessage?.id || null,
     });
     setMessage("");
+    clearReferencedMessage();
     setSending(false);
   };
 
@@ -59,6 +63,36 @@ function ChatInput({ facultyId }: { facultyId: string }) {
 
   return (
     <div className="px-4 bg-[#F8FAFA]/0 mb-3 w-full">
+      {/* 참조 메시지 표시 영역 */}
+      {referencedMessage && (
+        <div className="mb-2 p-3 bg-gray-100 rounded-lg border-l-4 border-blue-500">
+          <div className="flex justify-between items-start mb-1">
+            <span className="text-xs text-gray-600 font-medium">
+              참조: {referencedMessage.role === "user" ? "Student" : "GPT"}
+            </span>
+            <button
+              onClick={clearReferencedMessage}
+              className="text-xs text-gray-500 hover:text-gray-700"
+            >
+              ✕
+            </button>
+          </div>
+          <div className="text-sm text-gray-700 line-clamp-2">
+            {referencedMessage.message}
+          </div>
+          <button
+            onClick={() => {
+              if ((window as any).scrollToGptMessage) {
+                (window as any).scrollToGptMessage(referencedMessage.id);
+              }
+            }}
+            className="text-xs text-blue-500 hover:text-blue-700 mt-1"
+          >
+            원본 보기
+          </button>
+        </div>
+      )}
+
       <div className="w-full border border-gray-300 rounded-xl px-3 py-2 flex flex-col bg-white">
         <textarea
           ref={textareaRef}
@@ -98,12 +132,16 @@ interface Chat {
   sender_role: string;
   message: string;
   created_at: string;
+  referenced_message_id?: string;
 }
 
 function FacultyChat({ facultyId }: { facultyId: string }) {
   const { selectedRoom } = useRoomStore();
   const [chats, setChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(false);
+  const [referencedMessages, setReferencedMessages] = useState<{
+    [key: string]: any;
+  }>({});
   const containerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -130,6 +168,36 @@ function FacultyChat({ facultyId }: { facultyId: string }) {
     }
     fetchChats();
   }, [roomId, studentId, facultyId]);
+
+  // 참조된 메시지 정보 가져오기
+  useEffect(() => {
+    async function fetchReferencedMessages() {
+      if (!chats.length) return;
+
+      const referencedIds = chats
+        .filter((chat) => chat.referenced_message_id)
+        .map((chat) => chat.referenced_message_id!)
+        .filter((id, index, arr) => arr.indexOf(id) === index); // 중복 제거
+
+      if (referencedIds.length === 0) return;
+
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("chats")
+        .select("id, message, role")
+        .in("id", referencedIds);
+
+      if (data) {
+        const messageMap: { [key: string]: any } = {};
+        data.forEach((msg) => {
+          messageMap[msg.id] = msg;
+        });
+        setReferencedMessages(messageMap);
+      }
+    }
+
+    fetchReferencedMessages();
+  }, [chats]);
 
   // 실시간 구독
   useEffect(() => {
@@ -196,6 +264,10 @@ function FacultyChat({ facultyId }: { facultyId: string }) {
               );
             }
             const isFaculty = chat.sender_role === "faculty";
+            const referencedMessage = chat.referenced_message_id
+              ? referencedMessages[chat.referenced_message_id]
+              : null;
+
             return (
               <div
                 key={chat.id}
@@ -209,12 +281,56 @@ function FacultyChat({ facultyId }: { facultyId: string }) {
                       {chat.created_at?.slice(11, 16) || ""}
                     </span>
                     <div className="rounded-xl px-4 py-3 max-w-[70%] whitespace-pre-line text-sm bg-[#EDEEFC] text-gray-800">
+                      {referencedMessage && (
+                        <div
+                          className="mb-2 p-2 bg-gray-50 rounded-lg border-l-2 border-blue-400 cursor-pointer hover:bg-gray-100 transition-colors"
+                          onClick={() => {
+                            if ((window as any).scrollToGptMessage) {
+                              (window as any).scrollToGptMessage(
+                                referencedMessage.id
+                              );
+                            }
+                          }}
+                        >
+                          <div className="text-xs text-gray-500 mb-1">
+                            참조:{" "}
+                            {referencedMessage.role === "user"
+                              ? "Student"
+                              : "GPT"}
+                          </div>
+                          <div className="text-xs text-gray-700 line-clamp-2">
+                            {referencedMessage.message}
+                          </div>
+                        </div>
+                      )}
                       {chat.message}
                     </div>
                   </>
                 ) : (
                   <>
                     <div className="rounded-xl px-4 py-3 max-w-[70%] whitespace-pre-line text-sm bg-[#d3d5fc] text-gray-800">
+                      {referencedMessage && (
+                        <div
+                          className="mb-2 p-2 bg-gray-50 rounded-lg border-l-2 border-blue-400 cursor-pointer hover:bg-gray-100 transition-colors"
+                          onClick={() => {
+                            if ((window as any).scrollToGptMessage) {
+                              (window as any).scrollToGptMessage(
+                                referencedMessage.id
+                              );
+                            }
+                          }}
+                        >
+                          <div className="text-xs text-gray-500 mb-1">
+                            참조:{" "}
+                            {referencedMessage.role === "user"
+                              ? "Student"
+                              : "GPT"}
+                          </div>
+                          <div className="text-xs text-gray-700 line-clamp-2">
+                            {referencedMessage.message}
+                          </div>
+                        </div>
+                      )}
                       {chat.message}
                     </div>
                     <span className="text-[10px] text-gray-400 ml-2 mb-1 min-w-[32px] text-left">

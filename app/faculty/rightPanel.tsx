@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRightPanelStore } from "@/store/rightPanelStore";
 import { useRoomStore } from "@/store/roomStore";
+import { useReplyStore } from "@/store/replyStore";
 import type { Room } from "@/store/roomStore";
 import Image from "next/image";
 import { createClient } from "@/utils/supabase/client";
@@ -13,8 +14,27 @@ import remarkBreaks from "remark-breaks";
 function StudentChatListTab({ selectedRoom }: { selectedRoom: any }) {
   const [chats, setChats] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
   const supabase = createClient();
   const containerRef = useRef<HTMLDivElement>(null);
+  const messageRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  const { setReferencedMessage } = useReplyStore();
+
+  // 메시지로 스크롤하는 함수
+  const scrollToMessage = (messageId: string) => {
+    const messageElement = messageRefs.current[messageId];
+    if (messageElement && containerRef.current) {
+      messageElement.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
+
+  // 전역 함수로 등록 (ChatInput에서 호출할 수 있도록)
+  useEffect(() => {
+    (window as any).scrollToGptMessage = scrollToMessage;
+    return () => {
+      delete (window as any).scrollToGptMessage;
+    };
+  }, []);
 
   useEffect(() => {
     async function fetchChats() {
@@ -67,34 +87,74 @@ function StudentChatListTab({ selectedRoom }: { selectedRoom: any }) {
       {chats.map((chat) => {
         const time = chat.created_at?.slice(11, 16) || "";
         const isUser = chat.role === "user";
+        const isHovered = hoveredMessageId === chat.id;
+
+        const handleReply = () => {
+          setReferencedMessage({
+            id: chat.id,
+            message: chat.message,
+            role: chat.role,
+            created_at: chat.created_at,
+          });
+        };
+
         return (
           <div
             key={chat.id}
+            ref={(el) => {
+              messageRefs.current[chat.id] = el;
+            }}
             className={`flex items-end gap-1 ${
               isUser ? "justify-end" : "justify-start"
             }`}
+            onMouseEnter={() => setHoveredMessageId(chat.id)}
+            onMouseLeave={() => setHoveredMessageId(null)}
           >
             {isUser ? (
               <>
-                <span className="text-[10px] text-gray-400 mr-2 mb-1 min-w-[32px] text-right">
-                  {time}
-                </span>
-                <div className="rounded-xl px-4 py-3 max-w-[70%] whitespace-pre-line text-sm bg-[#EDEEFC] text-gray-800">
-                  <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
-                    {chat.message}
-                  </ReactMarkdown>
+                <div className="flex flex-col items-end mb-1">
+                  <div className="rounded-xl px-4 py-3 max-w-[70%] whitespace-pre-line text-sm bg-[#EDEEFC] text-gray-800">
+                    <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
+                      {chat.message}
+                    </ReactMarkdown>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1 justify-end w-full">
+                    {isHovered && (
+                      <button
+                        onClick={handleReply}
+                        className="text-xs text-gray-500 hover:text-blue-500 transition-colors"
+                      >
+                        Reply
+                      </button>
+                    )}
+                    <span className="text-[10px] text-gray-400 min-w-[32px] text-left">
+                      {time}
+                    </span>
+                  </div>
                 </div>
               </>
             ) : (
               <>
-                <div className="rounded-xl px-4 py-3 max-w-[70%] whitespace-pre-line text-sm bg-[#d3d5fc] text-gray-800">
-                  <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
-                    {chat.message}
-                  </ReactMarkdown>
+                <div className="flex flex-col items-start">
+                  <div className="rounded-xl px-4 py-3 max-w-[70%] whitespace-pre-line text-sm bg-[#d3d5fc] text-gray-800">
+                    <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
+                      {chat.message}
+                    </ReactMarkdown>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1 justify-start w-full">
+                    <span className="text-[10px] text-gray-400 min-w-[32px] text-right">
+                      {time}
+                    </span>
+                    {isHovered && (
+                      <button
+                        onClick={handleReply}
+                        className="text-xs text-gray-500 hover:text-blue-500 transition-colors"
+                      >
+                        Reply
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <span className="text-[10px] text-gray-400 ml-2 mb-1 min-w-[32px] text-left">
-                  {time}
-                </span>
               </>
             )}
           </div>

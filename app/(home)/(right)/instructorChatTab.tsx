@@ -20,6 +20,7 @@ interface Chat {
   sender_role: string;
   message: string;
   created_at: string;
+  referenced_message_id?: string; // 참조 메시지 ID
 }
 
 const supabase = createClient();
@@ -29,10 +30,32 @@ export default function InstructorChatTab({
 }: InstructorChatTabProps) {
   const [chats, setChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(false);
+  const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const messageRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [referencedMessages, setReferencedMessages] = useState<{
+    [key: string]: any;
+  }>({});
+  // replyStore 관련 코드 제거
+
+  // 메시지로 스크롤하는 함수
+  const scrollToMessage = (messageId: string) => {
+    const messageElement = messageRefs.current[messageId];
+    if (messageElement && containerRef.current) {
+      messageElement.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
+
+  // 전역 함수로 등록 (ChatInput에서 호출할 수 있도록)
+  useEffect(() => {
+    (window as any).scrollToGptMessage = scrollToMessage;
+    return () => {
+      delete (window as any).scrollToGptMessage;
+    };
+  }, []);
 
   // TODO: 실제 로그인 학생 id, 교수 id를 받아와야 함
   const studentId = selectedRoom?.fk_user_id;
@@ -133,8 +156,10 @@ export default function InstructorChatTab({
       sender_role: "student",
       message: input,
       created_at: new Date(),
+      // referenced_message_id: referencedMessage?.id || null, // 제거
     });
     setInput("");
+    // clearReferencedMessage(); // 제거
     setSending(false);
   };
 
@@ -145,6 +170,33 @@ export default function InstructorChatTab({
       handleSend();
     }
   };
+
+  useEffect(() => {
+    // 교수자 메시지 중 참조 메시지 id만 모아서 fetch
+    async function fetchReferencedMessages() {
+      if (!chats.length) return;
+      const refIds = chats
+        .filter(
+          (chat) => chat.sender_role === "faculty" && chat.referenced_message_id
+        )
+        .map((chat) => chat.referenced_message_id)
+        .filter((id, idx, arr) => id && arr.indexOf(id) === idx);
+      if (refIds.length === 0) return;
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("chats") // 반드시 chats 테이블에서 가져오도록 수정
+        .select("id, message, role")
+        .in("id", refIds);
+      if (data) {
+        const map: { [key: string]: any } = {};
+        data.forEach((msg) => {
+          map[msg.id] = msg;
+        });
+        setReferencedMessages(map);
+      }
+    }
+    fetchReferencedMessages();
+  }, [chats]);
 
   return (
     <div className="flex flex-col h-full">
@@ -174,37 +226,80 @@ export default function InstructorChatTab({
                 );
               }
               const isStudent = chat.sender_role === "student";
+              const referenced =
+                chat.sender_role === "faculty" && chat.referenced_message_id
+                  ? referencedMessages[chat.referenced_message_id]
+                  : null;
               return (
                 <div
                   key={chat.id}
+                  ref={(el) => {
+                    messageRefs.current[chat.id] = el;
+                  }}
                   className={`flex items-end gap-1 my-2 ${
                     isStudent ? "justify-end" : "justify-start"
                   }`}
+                  // onMouseEnter={() => setHoveredMessageId(chat.id)}
+                  // onMouseLeave={() => setHoveredMessageId(null)}
                 >
                   {isStudent ? (
-                    <>
-                      <span className="text-[10px] text-gray-400 mr-2 mb-1 min-w-[32px] text-right">
-                        {chat.created_at?.slice(11, 16) || ""}
-                      </span>
-                      <div className="rounded-xl px-4 py-3 max-w-[70%] whitespace-pre-line text-sm bg-[#EDEEFC] text-gray-800">
+                    <div className="flex items-end ml-10">
+                      <div className="flex items-center gap-2 my-1 mr-3">
+                        <span className="text-[10px] text-gray-400 min-w-[32px] text-right">
+                          {chat.created_at?.slice(11, 16) || ""}
+                        </span>
+                      </div>
+                      <div className="rounded-xl px-4 py-3 whitespace-pre-line text-sm bg-[#EDEEFC] text-gray-800">
                         {chat.message}
                       </div>
-                    </>
+                    </div>
                   ) : (
-                    <>
-                      <div className="rounded-xl px-4 py-3 max-w-[70%] whitespace-pre-line text-sm bg-[#d3d5fc] text-gray-800">
+                    <div className="flex items-end">
+                      <div className="rounded-xl px-4 py-3 whitespace-pre-line text-sm bg-[#d3d5fc] text-gray-800">
+                        {referenced && (
+                          <div
+                            className="mb-2 p-2 bg-gray-50 rounded-lg border-l-2 border-blue-400 cursor-pointer"
+                            onClick={() => {
+                              if (
+                                window.gptMessageRefs[
+                                  chat.referenced_message_id
+                                ]?.current
+                              ) {
+                                window.gptMessageRefs[
+                                  chat.referenced_message_id
+                                ].current.scrollIntoView({
+                                  behavior: "smooth",
+                                  block: "center",
+                                });
+                              }
+                            }}
+                          >
+                            <div className="text-xs text-gray-500 mb-1">
+                              참조:{" "}
+                              {referenced.role === "user" ? "Student" : "GPT"}
+                            </div>
+                            <div className="text-xs text-gray-700 line-clamp-2">
+                              {referenced.message}
+                            </div>
+                          </div>
+                        )}
                         {chat.message}
                       </div>
-                      <span className="text-[10px] text-gray-400 ml-2 mb-1 min-w-[32px] text-left">
-                        {chat.created_at?.slice(11, 16) || ""}
-                      </span>
-                    </>
+                      <div className="flex flex-col items-start ml-3">
+                        <div className="flex items-center gap-2 my-1">
+                          <span className="text-[10px] text-gray-400 min-w-[32px] text-left">
+                            {chat.created_at?.slice(11, 16) || ""}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   )}
                 </div>
               );
             })
           )}
         </div>
+        {/* 참조 메시지 표시 영역 제거 */}
         <div className="flex-shrink-0">
           <div className="px-2 py-2 bg-white border-t border-gray-100">
             <div className="w-full border border-gray-300 rounded-xl px-3 py-2 flex flex-col bg-white">

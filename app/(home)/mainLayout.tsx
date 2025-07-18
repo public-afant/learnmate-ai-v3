@@ -11,7 +11,7 @@ export default function Layout() {
       <div className="w-[1px] bg-gray-100" />
 
       {/* Chat Panel */}
-      <div className="flex-1 h-full">
+      <div className="flex-1 h-full min-w-[330px]">
         <ChatPanel />
       </div>
 

@@ -49,7 +49,7 @@ export default function ChatInput({ setIsLoading }) {
         fk_room_id: selectedRoom.id,
         role: "user",
         message: content,
-        referenced_message_id: referencedMessage?.id || null,
+        // referenced_message_id: referencedMessage?.id || null, // 필요 없으므로 제거
       })
       .select()
       .single();

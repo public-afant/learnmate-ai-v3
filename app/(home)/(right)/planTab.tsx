@@ -47,26 +47,38 @@ export default function PlanTab({ selectedRoom }) {
       <div>
         <div className="text-xs text-gray-400 mb-2">Project Description</div>
         <div className="overflow-x-auto">
-          <table className="min-w-full table-fixed border border-gray-200 text-left text-sm">
+          <table className="min-w-full border border-gray-200 text-left text-sm table-fixed">
+            <colgroup>
+              <col style={{ width: "70px" }} />
+              <col style={{ width: "180px" }} />
+              <col style={{ width: "200px" }} />
+              <col style={{ width: "250px" }} />
+            </colgroup>
             <thead className="bg-gray-100 text-gray-500">
               <tr>
-                <th className="p-2 w-[80px] border">Week</th>
-                <th className="p-2 border">Inquiry Question</th>
-                <th className="p-2 border">Reference Materials</th>
-                <th className="p-2 border">Learning Activity</th>
+                <th className="p-2 border break-words">Week</th>
+                <th className="p-2 border break-words">Inquiry Question</th>
+                <th className="p-2 border break-words">Reference Materials</th>
+                <th className="p-2 border break-words">Learning Activity</th>
               </tr>
             </thead>
             <tbody>
-              {plan.learning_plan.map((item) => (
+              {plan.learning_plan.map((item: any) => (
                 <tr key={item.week} className="align-top">
-                  <td className="p-2 border font-medium text-gray-600">
+                  <td className="p-2 border font-medium text-gray-600 break-words">
                     Week{item.week}
                   </td>
-                  <td className="p-2 border">{item.inquiry_question}</td>
-                  <td className="p-2 border whitespace-pre-line">
-                    {item.reference_materials.map((r: string) => `- ${r}\n`)}
+                  <td className="p-2 border break-words whitespace-pre-line">
+                    {item.inquiry_question}
                   </td>
-                  <td className="p-2 border">{item.learning_activity}</td>
+                  <td className="p-2 border break-words whitespace-pre-line">
+                    {item.reference_materials.map((r: string, idx: number) => (
+                      <div key={idx}>- {r}</div>
+                    ))}
+                  </td>
+                  <td className="p-2 border break-words whitespace-pre-line">
+                    {item.learning_activity}
+                  </td>
                 </tr>
               ))}
             </tbody>

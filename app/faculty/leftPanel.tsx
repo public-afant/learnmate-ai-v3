@@ -103,7 +103,7 @@ export default function LeftPanel({ userId }: LeftPanelProps) {
         fk_student_id: inviteRow.fk_user_id,
         fk_faculty_id: inviteRow.fk_user_faculty_id,
         sender_role: "system",
-        message: "교수자 채팅방이 개설되었습니다.",
+        message: `You have accepted the student’s request.\nPlease start the conversation.`,
         created_at: new Date(),
       });
     }

@@ -10,7 +10,7 @@ import { useState, useRef, useEffect } from "react";
 
 const supabase = createClient();
 
-export default function ChatInput({ setIsLoading }) {
+export default function ChatInput({ setIsLoading, isLoading }) {
   // const [isNext, setIsNext] = useState(false);
   const [nextModal, setNextModal] = useState(false);
   const [message, setMessage] = useState("");
@@ -135,7 +135,7 @@ export default function ChatInput({ setIsLoading }) {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey && !isComposing) {
+    if (e.key === "Enter" && !e.shiftKey && !isComposing && !isLoading) {
       e.preventDefault();
       handleSend();
     }
@@ -148,7 +148,7 @@ export default function ChatInput({ setIsLoading }) {
         <div className="mb-2 p-3 bg-gray-100 rounded-lg border-l-4 border-blue-500">
           <div className="flex justify-between items-start mb-1">
             <span className="text-xs text-gray-600 font-medium">
-              참조: {referencedMessage.role === "user" ? "Student" : "Faculty"}
+              참조: {referencedMessage.role === "user" ? "학생" : "교수자"}
             </span>
             <button
               onClick={clearReferencedMessage}
@@ -189,7 +189,7 @@ export default function ChatInput({ setIsLoading }) {
           placeholder="Type a message..."
           className="w-full resize-none overflow-y-auto text-sm focus:outline-none max-h-[60px] mb-3"
           style={{ lineHeight: "20px" }}
-          disabled={!selectedRoom?.room_state}
+          disabled={!selectedRoom?.room_state || isLoading}
         />
 
         <div className="flex justify-between">
@@ -215,22 +215,28 @@ export default function ChatInput({ setIsLoading }) {
                 Next
               </div>
             )}
-            {/* {selectedRoom?.state === 3 && (
+            {selectedRoom?.state === 3 && (
               <div className="text-sm px-3 py-1 rounded-xl bg-[#816eff] hover:bg-[#6B50FF] text-white cursor-pointer">
                 🔥 Challenge Mode
               </div>
-            )} */}
+            )}
           </div>
           <div
-            onClick={handleSend}
+            onClick={() => {
+              if (!isLoading) handleSend();
+            }}
             className={`
               text-sm px-3 py-1 rounded-xl
               ${
-                selectedRoom?.room_state
+                selectedRoom?.room_state && !isLoading
                   ? "bg-[#816eff] hover:bg-[#6B50FF] text-white cursor-pointer"
-                  : "bg-gray-400 text-gray-200 cursor-not-allowed"
+                  : "bg-gray-300 text-gray-400 cursor-not-allowed opacity-70"
               }
             `}
+            style={{
+              pointerEvents: isLoading ? "none" : "auto",
+              transition: "background 0.2s, color 0.2s, opacity 0.2s",
+            }}
           >
             Send
           </div>

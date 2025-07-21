@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import LeftContainer from "./leftContainer";
+import formatChatTimestamp from "@/utils/formatChatTimestamp";
 
 export default async function LeftPanel() {
   const token = (await cookies()).get("auth_token");

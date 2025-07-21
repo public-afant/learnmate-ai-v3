@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef, KeyboardEvent } from "react";
 import { createClient } from "@/utils/supabase/client";
 import Image from "next/image";
+import formatChatTimestamp from "@/utils/formatChatTimestamp";
 
 interface InstructorChatTabProps {
   selectedRoom?: {
@@ -198,135 +199,175 @@ export default function InstructorChatTab({
     fetchReferencedMessages();
   }, [chats]);
 
+  // 교수자 승인 여부 확인
+  const [isInstructorAccepted, setIsInstructorAccepted] =
+    useState<boolean>(false);
+  useEffect(() => {
+    async function checkInstructorAccepted() {
+      if (!roomId || !facultyId) return;
+      const { data } = await supabase
+        .from("invite")
+        .select("state")
+        .eq("fk_room_id", roomId)
+        .eq("fk_user_faculty_id", facultyId)
+        .single();
+      setIsInstructorAccepted(!!data?.state);
+    }
+    checkInstructorAccepted();
+  }, [roomId, facultyId]);
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex flex-col flex-1 min-h-0 p-4 gap-3">
-        <div ref={containerRef} className="flex-1 min-h-0 overflow-y-auto">
-          {loading ? (
-            <div className="text-gray-400 text-center">Loading...</div>
-          ) : chats.length === 0 ? (
-            <div className="flex flex-col items-center mt-10">
-              <Image
-                src="/ic-approval.png"
-                width={200}
-                height={100}
-                alt="no-chats"
-              />
-              <div className="font-bold text-[16px] mt-4">
-                No instructor chats yet.
-              </div>
+        {selectedRoom?.state === 2 ||
+        selectedRoom?.state === 3 ||
+        selectedRoom?.state === 4 ? (
+          selectedRoom?.state === 2 && !isInstructorAccepted ? (
+            <div className="flex flex-1 items-center justify-center text-gray-400 text-lg font-semibold">
+              Waiting for the instructor to accept your request
             </div>
           ) : (
-            chats.map((chat: Chat) => {
-              if (chat.sender_role === "system") {
-                return (
-                  <div key={chat.id} className="text-center text-gray-400 my-2">
-                    {chat.message}
-                  </div>
-                );
-              }
-              const isStudent = chat.sender_role === "student";
-              const referenced =
-                chat.sender_role === "faculty" && chat.referenced_message_id
-                  ? referencedMessages[chat.referenced_message_id]
-                  : null;
-              return (
-                <div
-                  key={chat.id}
-                  ref={(el) => {
-                    messageRefs.current[chat.id] = el;
-                  }}
-                  className={`flex items-end gap-1 my-2 ${
-                    isStudent ? "justify-end" : "justify-start"
-                  }`}
-                  // onMouseEnter={() => setHoveredMessageId(chat.id)}
-                  // onMouseLeave={() => setHoveredMessageId(null)}
-                >
-                  {isStudent ? (
-                    <div className="flex items-end ml-10">
-                      <div className="flex items-center gap-2 my-1 mr-3">
-                        <span className="text-[10px] text-gray-400 min-w-[32px] text-right">
-                          {chat.created_at?.slice(11, 16) || ""}
-                        </span>
-                      </div>
-                      <div className="rounded-xl px-4 py-3 whitespace-pre-line text-sm bg-[#EDEEFC] text-gray-800">
-                        {chat.message}
-                      </div>
+            <>
+              <div
+                ref={containerRef}
+                className="flex-1 min-h-0 overflow-y-auto"
+              >
+                {loading ? (
+                  <div className="text-gray-400 text-center">Loading...</div>
+                ) : chats.length === 0 ? (
+                  <div className="flex flex-col items-center mt-10">
+                    <Image
+                      src="/ic-approval.png"
+                      width={200}
+                      height={100}
+                      alt="no-chats"
+                    />
+                    <div className="font-bold text-[16px] mt-4 text-gray-500">
+                      No instructor chats yet.
                     </div>
-                  ) : (
-                    <div className="flex items-end">
-                      <div className="rounded-xl px-4 py-3 whitespace-pre-line text-sm bg-[#d3d5fc] text-gray-800">
-                        {referenced && (
-                          <div
-                            className="mb-2 p-2 bg-gray-50 rounded-lg border-l-2 border-blue-400 cursor-pointer"
-                            onClick={() => {
-                              if (
-                                window.gptMessageRefs[
-                                  chat.referenced_message_id
-                                ]?.current
-                              ) {
-                                window.gptMessageRefs[
-                                  chat.referenced_message_id
-                                ].current.scrollIntoView({
-                                  behavior: "smooth",
-                                  block: "center",
-                                });
-                              }
-                            }}
-                          >
-                            <div className="text-xs text-gray-500 mb-1">
-                              참조:{" "}
-                              {referenced.role === "user" ? "Student" : "GPT"}
+                  </div>
+                ) : (
+                  chats.map((chat: Chat) => {
+                    if (chat.sender_role === "system") {
+                      return (
+                        <div
+                          key={chat.id}
+                          className="text-center text-gray-400 my-2"
+                        >
+                          {chat.message}
+                        </div>
+                      );
+                    }
+                    const isStudent = chat.sender_role === "student";
+                    const referenced =
+                      chat.sender_role === "faculty" &&
+                      chat.referenced_message_id
+                        ? referencedMessages[chat.referenced_message_id]
+                        : null;
+                    return (
+                      <div
+                        key={chat.id}
+                        ref={(el) => {
+                          messageRefs.current[chat.id] = el;
+                        }}
+                        className={`flex items-end gap-1 my-2 ${
+                          isStudent ? "justify-end" : "justify-start"
+                        }`}
+                      >
+                        {isStudent ? (
+                          <div className="flex items-end ml-10">
+                            <div className="flex items-center gap-2 my-1 mr-3">
+                              <span className="text-[10px] text-gray-400 min-w-[32px] text-right">
+                                {formatChatTimestamp(chat.created_at).time}
+                              </span>
                             </div>
-                            <div className="text-xs text-gray-700 line-clamp-2">
-                              {referenced.message}
+                            <div className="rounded-xl px-4 py-3 whitespace-pre-line text-sm bg-[#EDEEFC] text-gray-800">
+                              {chat.message}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-end">
+                            <div className="rounded-xl px-4 py-3 whitespace-pre-line text-sm bg-[#d3d5fc] text-gray-800">
+                              {referenced && (
+                                <div
+                                  className="mb-2 p-2 bg-gray-50 rounded-lg border-l-2 border-blue-400 cursor-pointer"
+                                  onClick={() => {
+                                    const ref = (window as any)
+                                      .gptMessageRefs?.[referenced.id];
+                                    if (ref && ref.current) {
+                                      ref.current.scrollIntoView({
+                                        behavior: "smooth",
+                                        block: "center",
+                                      });
+                                    }
+                                  }}
+                                >
+                                  <div className="text-xs text-gray-500 mb-1">
+                                    참조:{" "}
+                                    {referenced.role === "user"
+                                      ? "학생"
+                                      : referenced.role === "assistant"
+                                      ? "GPT"
+                                      : referenced.role}
+                                  </div>
+                                  <div className="text-xs text-gray-700 line-clamp-2">
+                                    {referenced.message}
+                                  </div>
+                                </div>
+                              )}
+                              {chat.message}
+                            </div>
+                            <div className="flex flex-col items-start ml-3">
+                              <div className="flex items-center gap-2 my-1">
+                                <span className="text-[10px] text-gray-400 min-w-[32px] text-left">
+                                  {formatChatTimestamp(chat.created_at).time}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         )}
-                        {chat.message}
                       </div>
-                      <div className="flex flex-col items-start ml-3">
-                        <div className="flex items-center gap-2 my-1">
-                          <span className="text-[10px] text-gray-400 min-w-[32px] text-left">
-                            {chat.created_at?.slice(11, 16) || ""}
-                          </span>
+                    );
+                  })
+                )}
+              </div>
+              {/* state가 4가 아닐 때만 입력창 노출 */}
+              {selectedRoom?.state !== 4 && (
+                <div className="flex-shrink-0">
+                  <div className="px-2 py-2 bg-white border-t border-gray-100">
+                    <div className="w-full border border-gray-300 rounded-xl px-3 py-2 flex flex-col bg-white">
+                      <textarea
+                        ref={textareaRef}
+                        rows={1}
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder="메시지를 입력하세요..."
+                        className="w-full resize-none overflow-y-auto text-sm focus:outline-none max-h-[60px] mb-3 bg-white"
+                        style={{ lineHeight: "20px" }}
+                        disabled={sending}
+                      />
+                      <div className="flex justify-end">
+                        <div
+                          className={`text-sm px-3 py-1 rounded-xl bg-[#816eff] hover:bg-[#6B50FF] text-white cursor-pointer ${
+                            sending ? "opacity-50 pointer-events-none" : ""
+                          }`}
+                          onClick={handleSend}
+                        >
+                          Send
                         </div>
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
-              );
-            })
-          )}
-        </div>
-        {/* 참조 메시지 표시 영역 제거 */}
-        <div className="flex-shrink-0">
-          <div className="px-2 py-2 bg-white border-t border-gray-100">
-            <div className="w-full border border-gray-300 rounded-xl px-3 py-2 flex flex-col bg-white">
-              <textarea
-                ref={textareaRef}
-                rows={1}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="메시지를 입력하세요..."
-                className="w-full resize-none overflow-y-auto text-sm focus:outline-none max-h-[60px] mb-3 bg-white"
-                style={{ lineHeight: "20px" }}
-                disabled={sending}
-              />
-              <div className="flex justify-end">
-                <div
-                  className={`text-sm px-3 py-1 rounded-xl bg-[#816eff] hover:bg-[#6B50FF] text-white cursor-pointer ${
-                    sending ? "opacity-50 pointer-events-none" : ""
-                  }`}
-                  onClick={handleSend}
-                >
-                  Send
-                </div>
-              </div>
-            </div>
+              )}
+            </>
+          )
+        ) : (
+          <div className="flex flex-1 items-center justify-center text-gray-400 text-lg font-semibold">
+            Reach the Sprout Stage to start matching.
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

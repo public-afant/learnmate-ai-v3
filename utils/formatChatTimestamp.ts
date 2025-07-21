@@ -1,17 +1,25 @@
-export default function formatChatTimestamp(isoString: string): {
-  date: string;
-  time: string;
-} {
-  const date = new Date(isoString);
-
-  const yy = String(date.getFullYear()).slice(2); // '24'
-  const MM = String(date.getMonth() + 1).padStart(2, "0"); // '08'
-  const dd = String(date.getDate()).padStart(2, "0"); // '05'
-  const hh = String(date.getHours()).padStart(2, "0"); // '08'
-  const mm = String(date.getMinutes()).padStart(2, "0"); // '14'
-
-  return {
-    date: `${yy}.${MM}.${dd}`,
-    time: `${hh}:${mm}`,
-  };
+export default function formatChatTimestamp(utcString: string) {
+  const date = new Date(utcString);
+  // KST(Asia/Seoul)로 변환
+  const time = date.toLocaleTimeString("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Seoul",
+  });
+  // YYYY-MM-DD 포맷
+  const year = date.toLocaleString("en-CA", {
+    year: "numeric",
+    timeZone: "Asia/Seoul",
+  });
+  const month = date.toLocaleString("en-CA", {
+    month: "2-digit",
+    timeZone: "Asia/Seoul",
+  });
+  const day = date.toLocaleString("en-CA", {
+    day: "2-digit",
+    timeZone: "Asia/Seoul",
+  });
+  const dateStr = `${year}-${month}-${day}`;
+  return { time, date: dateStr };
 }

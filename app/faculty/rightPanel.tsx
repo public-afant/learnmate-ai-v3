@@ -10,6 +10,8 @@ import { createClient } from "@/utils/supabase/client";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
+import formatChatTimestamp from "@/utils/formatChatTimestamp";
+import PlanModal from "@/components/planModal";
 
 function StudentChatListTab({ selectedRoom }: { selectedRoom: any }) {
   const [chats, setChats] = useState<any[]>([]);
@@ -19,6 +21,7 @@ function StudentChatListTab({ selectedRoom }: { selectedRoom: any }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const messageRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const { setReferencedMessage } = useReplyStore();
+  const [planModalJson, setPlanModalJson] = useState<any>(null);
 
   // 메시지로 스크롤하는 함수
   const scrollToMessage = (messageId: string) => {
@@ -45,7 +48,7 @@ function StudentChatListTab({ selectedRoom }: { selectedRoom: any }) {
       setLoading(true);
       const { data } = await supabase
         .from("chats")
-        .select("id, message, role, created_at")
+        .select("id, message, role, created_at, json")
         .eq("fk_room_id", selectedRoom.id)
         .order("created_at", { ascending: true }); // 오름차순(최신이 아래)
       setChats(data ?? []);
@@ -80,87 +83,112 @@ function StudentChatListTab({ selectedRoom }: { selectedRoom: any }) {
     );
   }
   return (
-    <div
-      ref={containerRef}
-      className="flex-1 h-full flex flex-col gap-3 p-4 overflow-y-auto"
-    >
-      {chats.map((chat) => {
-        const time = chat.created_at?.slice(11, 16) || "";
-        const isUser = chat.role === "user";
-        const isHovered = hoveredMessageId === chat.id;
+    <>
+      <div
+        ref={containerRef}
+        className="flex-1 h-full flex flex-col gap-3 p-4 overflow-y-auto"
+      >
+        {chats.map((chat) => {
+          const time = chat.created_at?.slice(11, 16) || "";
+          const isUser = chat.role === "user";
+          const isHovered = hoveredMessageId === chat.id;
 
-        const handleReply = () => {
-          setReferencedMessage({
-            id: chat.id,
-            message: chat.message,
-            role: chat.role,
-            created_at: chat.created_at,
-          });
-        };
+          const handleReply = () => {
+            setReferencedMessage({
+              id: chat.id,
+              message: chat.message,
+              role: chat.role,
+              created_at: chat.created_at,
+            });
+          };
 
-        return (
-          <div
-            key={chat.id}
-            ref={(el) => {
-              messageRefs.current[chat.id] = el;
-            }}
-            className={`flex items-end gap-1 ${
-              isUser ? "justify-end" : "justify-start"
-            }`}
-            onMouseEnter={() => setHoveredMessageId(chat.id)}
-            onMouseLeave={() => setHoveredMessageId(null)}
-          >
-            {isUser ? (
-              <>
-                <div className="flex flex-col items-end mb-1">
-                  <div className="rounded-xl px-4 py-3 max-w-[70%] whitespace-pre-line text-sm bg-[#EDEEFC] text-gray-800">
-                    <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
-                      {chat.message}
-                    </ReactMarkdown>
+          return (
+            <div
+              key={chat.id}
+              ref={(el) => {
+                messageRefs.current[chat.id] = el;
+              }}
+              className={`flex items-end gap-1 ${
+                isUser ? "justify-end" : "justify-start"
+              }`}
+              onMouseEnter={() => setHoveredMessageId(chat.id)}
+              onMouseLeave={() => setHoveredMessageId(null)}
+            >
+              {isUser ? (
+                <>
+                  <div className="flex flex-col items-end">
+                    <div className="rounded-xl px-4 py-3 ml-15 whitespace-pre-line text-sm bg-[#EDEEFC] text-gray-800">
+                      <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
+                        {chat.message}
+                      </ReactMarkdown>
+                      {chat.json && (
+                        <div
+                          onClick={() => setPlanModalJson(chat.json)}
+                          className="cursor-pointer mt-2 px-2 py-1 rounded-sm bg-[#816eff] hover:bg-[#6B50FF] text-white text-sm inline-block"
+                        >
+                          Show Plan
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 mb-1">
+                      {isHovered && (
+                        <button
+                          onClick={handleReply}
+                          className="text-xs text-gray-500 hover:text-blue-500 transition-colors"
+                        >
+                          Reply
+                        </button>
+                      )}
+                      <span className="text-[10px] text-gray-400 min-w-[32px] text-right">
+                        {formatChatTimestamp(chat.created_at).time}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 mt-1 justify-end w-full">
-                    {isHovered && (
-                      <button
-                        onClick={handleReply}
-                        className="text-xs text-gray-500 hover:text-blue-500 transition-colors"
-                      >
-                        Reply
-                      </button>
-                    )}
-                    <span className="text-[10px] text-gray-400 min-w-[32px] text-left">
-                      {time}
-                    </span>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <>
+                </>
+              ) : (
                 <div className="flex flex-col items-start">
                   <div className="rounded-xl px-4 py-3 max-w-[70%] whitespace-pre-line text-sm bg-[#d3d5fc] text-gray-800">
                     <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
                       {chat.message}
                     </ReactMarkdown>
-                  </div>
-                  <div className="flex items-center gap-2 mt-1 justify-start w-full">
-                    <span className="text-[10px] text-gray-400 min-w-[32px] text-right">
-                      {time}
-                    </span>
-                    {isHovered && (
-                      <button
-                        onClick={handleReply}
-                        className="text-xs text-gray-500 hover:text-blue-500 transition-colors"
+                    {chat.json && (
+                      <div
+                        onClick={() => setPlanModalJson(chat.json)}
+                        className="cursor-pointer mt-2 px-2 py-1 rounded-sm bg-[#816eff] hover:bg-[#6B50FF] text-white text-sm inline-block"
                       >
-                        Reply
-                      </button>
+                        Show Plan
+                      </div>
                     )}
                   </div>
+                  <div className="flex flex-col items-start ml-1 mt-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[10px] text-gray-400 min-w-[32px] text-left">
+                        {formatChatTimestamp(chat.created_at).time}
+                      </span>
+                      {isHovered && (
+                        <button
+                          onClick={handleReply}
+                          className="text-xs text-gray-500 hover:text-blue-500 transition-colors"
+                        >
+                          Reply
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </>
-            )}
-          </div>
-        );
-      })}
-    </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      {planModalJson && (
+        <PlanModal
+          json={planModalJson}
+          setIsModal={() => setPlanModalJson(null)}
+          hideConfirm={true}
+        />
+      )}
+    </>
   );
 }
 
@@ -171,7 +199,7 @@ function StudentPlanTab({ selectedRoom }: { selectedRoom: any }) {
     return (
       <div className="flex flex-col items-center mt-10">
         <div>
-          <Image src="/ic-plan.png" width={300} height={100} alt="ic-plan" />
+          <Image src="/ic-plan.png" width={200} height={100} alt="no-chats" />
         </div>
         <div className="font-bold text-[16px] mt-4">
           No learning plan available.
@@ -179,9 +207,8 @@ function StudentPlanTab({ selectedRoom }: { selectedRoom: any }) {
       </div>
     );
   }
-
   return (
-    <div className="p-6 text-sm text-gray-700 space-y-6">
+    <div className="p-6 text-sm text-gray-700 space-y-6 overflow-y-auto">
       {/* Top info */}
       <div>
         <div className="text-xs text-gray-400">Project Name</div>
@@ -215,44 +242,42 @@ function StudentPlanTab({ selectedRoom }: { selectedRoom: any }) {
       <div>
         <div className="text-xs text-gray-400 mb-2">Project Description</div>
         <div className="overflow-x-auto">
-          <table className="min-w-full table-fixed border border-gray-200 text-left text-sm">
+          <table className="min-w-full border border-gray-200 text-left text-sm table-fixed">
+            <colgroup>
+              <col style={{ width: "70px" }} />
+              <col style={{ width: "180px" }} />
+              <col style={{ width: "200px" }} />
+              <col style={{ width: "250px" }} />
+            </colgroup>
             <thead className="bg-gray-100 text-gray-500">
               <tr>
-                <th className="p-2 w-[80px] border">Week</th>
-                <th className="p-2 border">Inquiry Question</th>
-                <th className="p-2 border">Reference Materials</th>
-                <th className="p-2 border">Learning Activity</th>
+                <th className="p-2 border break-words">Week</th>
+                <th className="p-2 border break-words">Inquiry Question</th>
+                <th className="p-2 border break-words">Reference Materials</th>
+                <th className="p-2 border break-words">Learning Activity</th>
               </tr>
             </thead>
             <tbody>
               {plan.learning_plan.map((item: any) => (
                 <tr key={item.week} className="align-top">
-                  <td className="p-2 border font-medium text-gray-600">
+                  <td className="p-2 border font-medium text-gray-600 break-words">
                     Week{item.week}
                   </td>
-                  <td className="p-2 border">{item.inquiry_question}</td>
-                  <td className="p-2 border whitespace-pre-line">
-                    {item.reference_materials.map((r: string) => `- ${r}\n`)}
+                  <td className="p-2 border break-words whitespace-pre-line">
+                    {item.inquiry_question}
                   </td>
-                  <td className="p-2 border">{item.learning_activity}</td>
+                  <td className="p-2 border break-words whitespace-pre-line">
+                    {item.reference_materials.map((r: string, idx: number) => (
+                      <div key={idx}>- {r}</div>
+                    ))}
+                  </td>
+                  <td className="p-2 border break-words whitespace-pre-line">
+                    {item.learning_activity}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
-      </div>
-      <div className="*:cursor-pointer flex justify-end">
-        <div
-          className="mr-3 bg-[#816eff] px-4 py-2 rounded-full text-white hover:bg-[#6B50FF]"
-          onClick={() => window.open("https://scholar.google.com/", "_blank")}
-        >
-          Google Scholar
-        </div>
-        <div
-          className="bg-[#816eff] px-4 py-2 rounded-full text-white hover:bg-[#6B50FF]"
-          onClick={() => window.open("https://library.taejae.ac.kr/", "_blank")}
-        >
-          TJ Library
         </div>
       </div>
     </div>

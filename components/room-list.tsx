@@ -5,6 +5,7 @@
 // import { useEffect, useState } from "react";
 import { useRoomStore } from "@/store/roomStore";
 import Image from "next/image";
+import formatChatTimestamp from "@/utils/formatChatTimestamp";
 
 // const supabase = createClient();
 
@@ -83,7 +84,9 @@ export function RoomItem({ item, getRoomList }: RoomItemProps) {
       <div className="flex flex-col max-w-[160px]">
         <div className="font-semibold text-sm truncate">{item.title}</div>
         <div className="text-[12px] text-gray-400 font-semibold">
-          {changeTime(item.updated_at)}
+          {`${formatChatTimestamp(item.updated_at).date} ${
+            formatChatTimestamp(item.updated_at).time
+          }`}
         </div>
       </div>
     </div>

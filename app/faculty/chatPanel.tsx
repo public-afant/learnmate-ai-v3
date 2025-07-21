@@ -6,6 +6,10 @@ import { createClient } from "@/utils/supabase/client";
 import { useRoomStore } from "@/store/roomStore";
 import { useReplyStore } from "@/store/replyStore";
 import Image from "next/image";
+import formatChatTimestamp from "@/utils/formatChatTimestamp";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 
 function Chat() {
   return (
@@ -278,29 +282,16 @@ function FacultyChat({ facultyId }: { facultyId: string }) {
                 {isFaculty ? (
                   <>
                     <span className="text-[10px] text-gray-400 mr-2 mb-1 min-w-[32px] text-right">
-                      {chat.created_at?.slice(11, 16) || ""}
+                      {formatChatTimestamp(chat.created_at).time}
                     </span>
                     <div className="rounded-xl px-4 py-3 max-w-[70%] whitespace-pre-line text-sm bg-[#EDEEFC] text-gray-800">
                       {referencedMessage && (
-                        <div
-                          className="mb-2 p-2 bg-gray-50 rounded-lg border-l-2 border-blue-400 cursor-pointer hover:bg-gray-100 transition-colors"
-                          onClick={() => {
-                            if ((window as any).scrollToGptMessage) {
-                              (window as any).scrollToGptMessage(
-                                referencedMessage.id
-                              );
-                            }
-                          }}
-                        >
-                          <div className="text-xs text-gray-500 mb-1">
-                            참조:{" "}
-                            {referencedMessage.role === "user"
-                              ? "Student"
-                              : "GPT"}
-                          </div>
-                          <div className="text-xs text-gray-700 line-clamp-2">
+                        <div className="mb-2 p-2 bg-gray-50 rounded-lg border-l-2 border-blue-400 text-xs text-gray-700 max-w-[320px]">
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm, remarkBreaks]}
+                          >
                             {referencedMessage.message}
-                          </div>
+                          </ReactMarkdown>
                         </div>
                       )}
                       {chat.message}
@@ -309,32 +300,10 @@ function FacultyChat({ facultyId }: { facultyId: string }) {
                 ) : (
                   <>
                     <div className="rounded-xl px-4 py-3 max-w-[70%] whitespace-pre-line text-sm bg-[#d3d5fc] text-gray-800">
-                      {referencedMessage && (
-                        <div
-                          className="mb-2 p-2 bg-gray-50 rounded-lg border-l-2 border-blue-400 cursor-pointer hover:bg-gray-100 transition-colors"
-                          onClick={() => {
-                            if ((window as any).scrollToGptMessage) {
-                              (window as any).scrollToGptMessage(
-                                referencedMessage.id
-                              );
-                            }
-                          }}
-                        >
-                          <div className="text-xs text-gray-500 mb-1">
-                            참조:{" "}
-                            {referencedMessage.role === "user"
-                              ? "Student"
-                              : "GPT"}
-                          </div>
-                          <div className="text-xs text-gray-700 line-clamp-2">
-                            {referencedMessage.message}
-                          </div>
-                        </div>
-                      )}
                       {chat.message}
                     </div>
                     <span className="text-[10px] text-gray-400 ml-2 mb-1 min-w-[32px] text-left">
-                      {chat.created_at?.slice(11, 16) || ""}
+                      {formatChatTimestamp(chat.created_at).time}
                     </span>
                   </>
                 )}

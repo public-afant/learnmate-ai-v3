@@ -121,6 +121,18 @@ export default function InstructorChatTab({
           }
         }
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "faculty_student_chats",
+        },
+        (payload) => {
+          // DELETE 이벤트에서는 payload.old에 id만 포함되므로 조건 체크 없이 바로 삭제
+          setChats((prev) => prev.filter((chat) => chat.id !== payload.old.id));
+        }
+      )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
@@ -221,7 +233,8 @@ export default function InstructorChatTab({
       <div className="flex flex-col flex-1 min-h-0 p-4 gap-3">
         {selectedRoom?.state === 2 ||
         selectedRoom?.state === 3 ||
-        selectedRoom?.state === 4 ? (
+        selectedRoom?.state === 4 ||
+        selectedRoom?.state === 5 ? (
           selectedRoom?.state === 2 && !isInstructorAccepted ? (
             <div className="flex flex-1 items-center justify-center text-gray-400 text-lg font-semibold">
               Waiting for the instructor to accept your request

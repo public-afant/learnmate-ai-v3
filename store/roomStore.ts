@@ -6,9 +6,11 @@ export type Room = {
   fk_user_id: string;
   room_state: boolean;
   thread_id: string;
+  bot4_thread_id?: string;
   state: number;
   is_next: boolean;
   isChallenge: boolean;
+  plan?: any;
 };
 
 type RoomStore = {

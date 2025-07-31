@@ -148,9 +148,39 @@ function FacultyChat({ facultyId }: { facultyId: string }) {
   }>({});
   const containerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
 
   const studentId = selectedRoom?.fk_user_id;
   const roomId = selectedRoom?.id;
+
+  // 메시지 삭제 함수
+  const handleDeleteMessage = async (messageId: string) => {
+    // 삭제 확인
+    const isConfirmed = window.confirm("정말로 이 메시지를 삭제하시겠습니까?");
+    if (!isConfirmed) {
+      return;
+    }
+
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("faculty_student_chats")
+        .delete()
+        .eq("id", messageId);
+
+      if (error) {
+        console.error("메시지 삭제 실패:", error);
+        return;
+      }
+
+      // 화면에서도 메시지 제거
+      setChats((prevChats) =>
+        prevChats.filter((chat) => chat.id !== messageId)
+      );
+    } catch (error) {
+      console.error("메시지 삭제 중 오류:", error);
+    }
+  };
 
   useEffect(() => {
     async function fetchChats() {
@@ -271,6 +301,7 @@ function FacultyChat({ facultyId }: { facultyId: string }) {
             const referencedMessage = chat.referenced_message_id
               ? referencedMessages[chat.referenced_message_id]
               : null;
+            const isHovered = hoveredMessageId === chat.id;
 
             return (
               <div
@@ -278,23 +309,56 @@ function FacultyChat({ facultyId }: { facultyId: string }) {
                 className={`flex items-end gap-1 ${
                   isFaculty ? "justify-end" : "justify-start"
                 }`}
+                onMouseEnter={() => setHoveredMessageId(chat.id)}
+                onMouseLeave={() => setHoveredMessageId(null)}
               >
                 {isFaculty ? (
                   <>
-                    <span className="text-[10px] text-gray-400 mr-2 mb-1 min-w-[32px] text-right">
-                      {formatChatTimestamp(chat.created_at).time}
-                    </span>
-                    <div className="rounded-xl px-4 py-3 max-w-[70%] whitespace-pre-line text-sm bg-[#EDEEFC] text-gray-800">
-                      {referencedMessage && (
-                        <div className="mb-2 p-2 bg-gray-50 rounded-lg border-l-2 border-blue-400 text-xs text-gray-700 max-w-[320px]">
-                          <ReactMarkdown
-                            remarkPlugins={[remarkGfm, remarkBreaks]}
+                    <div className="flex items-end">
+                      <div className="flex  items-center gap-2 mb-1 mr-2">
+                        {isHovered && (
+                          <button
+                            onClick={() => handleDeleteMessage(chat.id)}
+                            className="text-xs text-red-500 hover:text-red-700 transition-colors cursor-pointer"
                           >
-                            {referencedMessage.message}
-                          </ReactMarkdown>
-                        </div>
-                      )}
-                      {chat.message}
+                            삭제
+                          </button>
+                        )}
+                        <span className="text-[10px] text-gray-400 min-w-[32px] text-right">
+                          {formatChatTimestamp(chat.created_at).time}
+                        </span>
+                      </div>
+                      <div className="rounded-xl px-4 py-3  whitespace-pre-line text-sm bg-[#EDEEFC] text-gray-800">
+                        {referencedMessage && (
+                          <div
+                            className="mb-2 p-2 bg-gray-50 rounded-lg border-l-2 border-blue-400 text-xs text-gray-700 max-w-[320px] cursor-pointer"
+                            onClick={() => {
+                              const ref = (window as any).gptMessageRefs?.[
+                                referencedMessage.id
+                              ];
+                              console.log(
+                                "ref",
+                                ref,
+                                referencedMessage.id,
+                                window.gptMessageRefs
+                              );
+                              if (ref && ref.current) {
+                                ref.current.scrollIntoView({
+                                  behavior: "smooth",
+                                  block: "center",
+                                });
+                              }
+                            }}
+                          >
+                            <ReactMarkdown
+                              remarkPlugins={[remarkGfm, remarkBreaks]}
+                            >
+                              {referencedMessage.message}
+                            </ReactMarkdown>
+                          </div>
+                        )}
+                        {chat.message}
+                      </div>
                     </div>
                   </>
                 ) : (

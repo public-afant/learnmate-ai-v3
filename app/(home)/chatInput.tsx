@@ -1,6 +1,7 @@
 "use client";
 
 import SelectFaculty from "@/components/selectFaculty";
+import ChallengeModal from "@/components/challengeModal";
 import { useChatStore } from "@/store/chatStore";
 import { useRoomStore } from "@/store/roomStore";
 import { useReplyStore } from "@/store/replyStore";
@@ -13,6 +14,7 @@ const supabase = createClient();
 export default function ChatInput({ setIsLoading, isLoading }) {
   // const [isNext, setIsNext] = useState(false);
   const [nextModal, setNextModal] = useState(false);
+  const [challengeModal, setChallengeModal] = useState(false);
   const [message, setMessage] = useState("");
   // const [thread, setThread] = useState("");
   const [isComposing, setIsComposing] = useState(false); // ⬅️ 한글 입력 조합 상태
@@ -82,7 +84,7 @@ export default function ChatInput({ setIsLoading, isLoading }) {
       }
     );
 
-    console.log(data);
+    // console.log(data);
 
     if (data.isNext) {
       const { data: updateResult } = await supabase
@@ -216,7 +218,29 @@ export default function ChatInput({ setIsLoading, isLoading }) {
               </div>
             )}
             {selectedRoom?.state === 3 && (
-              <div className="text-sm px-3 py-1 rounded-xl bg-[#816eff] hover:bg-[#6B50FF] text-white cursor-pointer">
+              <div
+                onClick={async () => {
+                  // 챌린지 모드 활성화
+                  if (selectedRoom && !selectedRoom.isChallenge) {
+                    const { data, error } = await supabase
+                      .from("rooms")
+                      .update({ isChallenge: true })
+                      .eq("id", selectedRoom.id)
+                      .select()
+                      .single();
+
+                    if (!error && data) {
+                      setSelectedRoom(data);
+                    }
+                  }
+                  setChallengeModal(true);
+                }}
+                className={`text-sm px-3 py-1 rounded-xl cursor-pointer ${
+                  selectedRoom?.isChallenge
+                    ? "bg-[#816eff] hover:bg-[#6B50FF] text-white shadow-md"
+                    : "bg-[#816eff] hover:bg-[#6B50FF] text-white"
+                }`}
+              >
                 🔥 Challenge Mode
               </div>
             )}
@@ -244,6 +268,12 @@ export default function ChatInput({ setIsLoading, isLoading }) {
       </div>
       {nextModal && (
         <SelectFaculty setNextModal={setNextModal} handleGPT={handleGPT} />
+      )}
+      {challengeModal && (
+        <ChallengeModal
+          isOpen={challengeModal}
+          onClose={() => setChallengeModal(false)}
+        />
       )}
     </div>
   );

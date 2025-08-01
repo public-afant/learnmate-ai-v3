@@ -31,12 +31,40 @@ export default function ChatHeader() {
   }
   return (
     <div className="h-12 bg-white px-4 flex items-center justify-between border-b-1 border-b-gray-100">
-      <h1
-        className="text-12 font-semibold text-gray-800 truncate overflow-hidden whitespace-nowrap"
-        title={selectedRoom?.title}
-      >
-        {selectedRoom?.title}
-      </h1>
+      <div className="flex items-center gap-2">
+        <h1
+          className="text-12 font-semibold text-gray-800 truncate overflow-hidden whitespace-nowrap"
+          title={selectedRoom?.title}
+        >
+          {selectedRoom?.title}
+        </h1>
+        {(selectedRoom?.state === 3 ||
+          selectedRoom?.state === 4 ||
+          selectedRoom?.state === 5) && (
+          <button
+            className="ml-2 px-2 py-1 rounded-full bg-[#816eff] text-white text-xs hover:bg-[#6B50FF] cursor-pointer"
+            onClick={async () => {
+              // 챌린지 모드 활성화
+              if (selectedRoom && !selectedRoom.isChallenge) {
+                const { data, error } = await supabase
+                  .from("rooms")
+                  .update({ isChallenge: true })
+                  .eq("id", selectedRoom.id)
+                  .select()
+                  .single();
+
+                if (!error && data) {
+                  setSelectedRoom(data);
+                }
+              }
+              // 챌린지 모달 열기 (전역 상태나 이벤트로 처리)
+              window.dispatchEvent(new CustomEvent("openChallengeModal"));
+            }}
+          >
+            🔥 Challenge
+          </button>
+        )}
+      </div>
 
       <div className="flex items-center gap-2">
         {selectedRoom?.state === 3 && (

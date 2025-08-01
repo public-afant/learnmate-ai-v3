@@ -84,7 +84,7 @@ export default function RightPanel() {
           </div>
 
           {/* 탭 컨텐츠 */}
-          <div className="flex-1 overflow-auto p-4 text-sm">
+          <div className="flex-1 overflow-hidden p-4 text-sm">
             {activeTab === "plan" && <PlanTab selectedRoom={selectedRoom} />}
             {activeTab === "note" && <NoteTab selectedRoom={selectedRoom} />}
             {activeTab === "chat" && (

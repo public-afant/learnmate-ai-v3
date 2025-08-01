@@ -252,7 +252,14 @@ function FacultyChat({ facultyId }: { facultyId: string }) {
             payload.new.fk_student_id === studentId &&
             payload.new.fk_faculty_id === facultyId
           ) {
-            setChats((prev) => [...prev, payload.new as Chat]);
+            // 중복 방지: 이미 존재하는 메시지는 추가하지 않음
+            setChats((prev) => {
+              const exists = prev.some((chat) => chat.id === payload.new.id);
+              if (exists) {
+                return prev;
+              }
+              return [...prev, payload.new as Chat];
+            });
           }
         }
       )
@@ -263,15 +270,23 @@ function FacultyChat({ facultyId }: { facultyId: string }) {
   }, [roomId, studentId, facultyId]);
 
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    container.scrollTop = container.scrollHeight;
+    const scrollToBottom = () => {
+      const container = containerRef.current;
+      if (!container) return;
+      container.scrollTop = container.scrollHeight;
+    };
+
+    // DOM 업데이트 후 스크롤 실행 (여러 번 시도)
+    setTimeout(scrollToBottom, 0);
+    setTimeout(scrollToBottom, 100);
+    setTimeout(scrollToBottom, 200);
   }, [chats]);
 
   return (
     <div
       ref={containerRef}
       className="flex-1 min-h-0 w-full flex flex-col gap-3 p-4 overflow-y-auto"
+      style={{ maxHeight: "calc(100vh - 200px)" }}
     >
       {loading ? (
         <div className="text-gray-400 text-center">Loading...</div>

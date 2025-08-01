@@ -16,6 +16,21 @@ export default function ChatInput({ setIsLoading, isLoading }) {
   const [nextModal, setNextModal] = useState(false);
   const [challengeModal, setChallengeModal] = useState(false);
   const [message, setMessage] = useState("");
+
+  // 챌린지 모달 이벤트 리스너
+  useEffect(() => {
+    const handleOpenChallengeModal = () => {
+      setChallengeModal(true);
+    };
+
+    window.addEventListener("openChallengeModal", handleOpenChallengeModal);
+    return () => {
+      window.removeEventListener(
+        "openChallengeModal",
+        handleOpenChallengeModal
+      );
+    };
+  }, []);
   // const [thread, setThread] = useState("");
   const [isComposing, setIsComposing] = useState(false); // ⬅️ 한글 입력 조합 상태
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -175,6 +190,7 @@ export default function ChatInput({ setIsLoading, isLoading }) {
         </div>
       )}
 
+      {/* 모든 상태에서 입력창 표시 (학습 종료 시에는 입력만 비활성화) */}
       <div
         className={` w-full border border-gray-300 rounded-xl px-3 py-2 flex flex-col ${
           selectedRoom?.room_state ? "bg-white" : "bg-gray-200"
@@ -188,10 +204,19 @@ export default function ChatInput({ setIsLoading, isLoading }) {
           onKeyDown={handleKeyDown}
           onCompositionStart={() => setIsComposing(true)} // ⬅️ 조합 시작
           onCompositionEnd={() => setIsComposing(false)} // ⬅️ 조합 종료
-          placeholder="Type a message..."
+          placeholder={
+            selectedRoom?.state === 4 || selectedRoom?.state === 5
+              ? "학습이 종료되었습니다."
+              : "Type a message..."
+          }
           className="w-full resize-none overflow-y-auto text-sm focus:outline-none max-h-[60px] mb-3"
           style={{ lineHeight: "20px" }}
-          disabled={!selectedRoom?.room_state || isLoading}
+          disabled={
+            !selectedRoom?.room_state ||
+            isLoading ||
+            selectedRoom?.state === 4 ||
+            selectedRoom?.state === 5
+          }
         />
 
         <div className="flex justify-between">
@@ -217,48 +242,37 @@ export default function ChatInput({ setIsLoading, isLoading }) {
                 Next
               </div>
             )}
-            {selectedRoom?.state === 3 && (
-              <div
-                onClick={async () => {
-                  // 챌린지 모드 활성화
-                  if (selectedRoom && !selectedRoom.isChallenge) {
-                    const { data, error } = await supabase
-                      .from("rooms")
-                      .update({ isChallenge: true })
-                      .eq("id", selectedRoom.id)
-                      .select()
-                      .single();
-
-                    if (!error && data) {
-                      setSelectedRoom(data);
-                    }
-                  }
-                  setChallengeModal(true);
-                }}
-                className={`text-sm px-3 py-1 rounded-xl cursor-pointer ${
-                  selectedRoom?.isChallenge
-                    ? "bg-[#816eff] hover:bg-[#6B50FF] text-white shadow-md"
-                    : "bg-[#816eff] hover:bg-[#6B50FF] text-white"
-                }`}
-              >
-                🔥 Challenge Mode
-              </div>
-            )}
           </div>
           <div
             onClick={() => {
-              if (!isLoading) handleSend();
+              if (
+                !isLoading &&
+                selectedRoom?.state !== 4 &&
+                selectedRoom?.state !== 5 &&
+                message.trim()
+              )
+                handleSend();
             }}
             className={`
-              text-sm px-3 py-1 rounded-xl
+              text-sm px-3 py-1 rounded-xl font-medium
               ${
-                selectedRoom?.room_state && !isLoading
-                  ? "bg-[#816eff] hover:bg-[#6B50FF] text-white cursor-pointer"
+                selectedRoom?.room_state &&
+                !isLoading &&
+                selectedRoom?.state !== 4 &&
+                selectedRoom?.state !== 5 &&
+                message.trim()
+                  ? "bg-[#816eff] hover:bg-[#6B50FF] text-white cursor-pointer shadow-md"
                   : "bg-gray-300 text-gray-400 cursor-not-allowed opacity-70"
               }
             `}
             style={{
-              pointerEvents: isLoading ? "none" : "auto",
+              pointerEvents:
+                isLoading ||
+                selectedRoom?.state === 4 ||
+                selectedRoom?.state === 5 ||
+                !message.trim()
+                  ? "none"
+                  : "auto",
               transition: "background 0.2s, color 0.2s, opacity 0.2s",
             }}
           >
@@ -266,6 +280,7 @@ export default function ChatInput({ setIsLoading, isLoading }) {
           </div>
         </div>
       </div>
+
       {nextModal && (
         <SelectFaculty setNextModal={setNextModal} handleGPT={handleGPT} />
       )}

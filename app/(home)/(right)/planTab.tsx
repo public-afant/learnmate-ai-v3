@@ -13,7 +13,7 @@ export default function PlanTab({ selectedRoom }) {
   }
 
   return (
-    <div className="p-6 text-sm text-gray-700 space-y-6">
+    <div className="p-6 text-sm text-gray-700 space-y-6 overflow-y-auto max-h-[calc(100vh-200px)]">
       {/* Top info */}
       <div>
         <div className="text-xs text-gray-400">Project Name</div>

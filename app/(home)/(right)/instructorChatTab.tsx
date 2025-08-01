@@ -9,7 +9,7 @@ interface InstructorChatTabProps {
   selectedRoom?: {
     id: string;
     fk_user_id: string;
-    // 필요한 필드 추가
+    state?: number;
   };
 }
 
@@ -21,7 +21,7 @@ interface Chat {
   sender_role: string;
   message: string;
   created_at: string;
-  referenced_message_id?: string; // 참조 메시지 ID
+  referenced_message_id?: string;
 }
 
 const supabase = createClient();
@@ -40,9 +40,7 @@ export default function InstructorChatTab({
   const [referencedMessages, setReferencedMessages] = useState<{
     [key: string]: any;
   }>({});
-  // replyStore 관련 코드 제거
 
-  // 메시지로 스크롤하는 함수
   const scrollToMessage = (messageId: string) => {
     const messageElement = messageRefs.current[messageId];
     if (messageElement && containerRef.current) {
@@ -50,7 +48,6 @@ export default function InstructorChatTab({
     }
   };
 
-  // 전역 함수로 등록 (ChatInput에서 호출할 수 있도록)
   useEffect(() => {
     (window as any).scrollToGptMessage = scrollToMessage;
     return () => {
@@ -58,22 +55,26 @@ export default function InstructorChatTab({
     };
   }, []);
 
-  // TODO: 실제 로그인 학생 id, 교수 id를 받아와야 함
   const studentId = selectedRoom?.fk_user_id;
   const roomId = selectedRoom?.id;
-  // 교수 id는 selectedRoom에 없으면 invite 등에서 fetch 필요
   const [facultyId, setFacultyId] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchFacultyId() {
       if (!roomId) return;
-      // invite 테이블에서 교수 id 조회
-      const { data } = await supabase
+      // console.log("Fetching faculty ID for room:", roomId);
+      const { data, error } = await supabase
         .from("invite")
         .select("fk_user_faculty_id")
         .eq("fk_room_id", roomId)
-        .eq("state", true)
         .single();
+
+      if (error) {
+        console.error("Error fetching faculty ID:", error);
+      } else {
+        // console.log("Faculty ID fetched:", data?.fk_user_faculty_id);
+      }
+
       setFacultyId(data?.fk_user_faculty_id || null);
     }
     fetchFacultyId();
@@ -82,24 +83,32 @@ export default function InstructorChatTab({
   useEffect(() => {
     async function fetchChats() {
       if (!roomId || !studentId || !facultyId) {
+        // console.log("Missing required data:", { roomId, studentId, facultyId });
         setChats([]);
         return;
       }
+      // console.log("Fetching chats for:", { roomId, studentId, facultyId });
       setLoading(true);
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("faculty_student_chats")
         .select("*")
         .eq("fk_room_id", roomId)
         .eq("fk_student_id", studentId)
         .eq("fk_faculty_id", facultyId)
         .order("created_at", { ascending: true });
+
+      if (error) {
+        console.error("Error fetching chats:", error);
+      } else {
+        // console.log("Chats fetched:", data?.length || 0);
+      }
+
       setChats(data ?? []);
       setLoading(false);
     }
     fetchChats();
   }, [roomId, studentId, facultyId]);
 
-  // 실시간 구독
   useEffect(() => {
     if (!roomId || !studentId || !facultyId) return;
     const channel = supabase
@@ -117,7 +126,22 @@ export default function InstructorChatTab({
             payload.new.fk_student_id === studentId &&
             payload.new.fk_faculty_id === facultyId
           ) {
-            setChats((prev) => [...prev, payload.new as Chat]);
+            // 중복 방지: 이미 존재하는 메시지는 추가하지 않음
+            setChats((prev) => {
+              const exists = prev.some((chat) => chat.id === payload.new.id);
+              if (exists) {
+                // console.log(
+                //   "Message already exists, skipping:",
+                //   payload.new.id
+                // );
+                return prev;
+              }
+              // console.log(
+              //   "Adding new message via subscription:",
+              //   payload.new.id
+              // );
+              return [...prev, payload.new as Chat];
+            });
           }
         }
       )
@@ -129,7 +153,6 @@ export default function InstructorChatTab({
           table: "faculty_student_chats",
         },
         (payload) => {
-          // DELETE 이벤트에서는 payload.old에 id만 포함되므로 조건 체크 없이 바로 삭제
           setChats((prev) => prev.filter((chat) => chat.id !== payload.old.id));
         }
       )
@@ -139,53 +162,76 @@ export default function InstructorChatTab({
     };
   }, [roomId, studentId, facultyId]);
 
-  // 스크롤 항상 하단
   useEffect(() => {
-    if (containerRef.current) {
-      (containerRef.current as HTMLDivElement).scrollTop = (
-        containerRef.current as HTMLDivElement
-      ).scrollHeight;
-    }
+    const scrollToBottom = () => {
+      if (containerRef.current) {
+        const container = containerRef.current;
+        container.scrollTop = container.scrollHeight;
+      }
+    };
+
+    // DOM 업데이트 후 스크롤 실행 (여러 번 시도)
+    setTimeout(scrollToBottom, 0);
+    setTimeout(scrollToBottom, 100);
+    setTimeout(scrollToBottom, 200);
   }, [chats]);
 
-  // 입력창 자동 높이 조절
   useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
       textarea.style.height = "auto";
-      const maxHeight = 3 * 20; // 3줄
+      const maxHeight = 3 * 20;
       textarea.style.height = Math.min(textarea.scrollHeight, maxHeight) + "px";
     }
   }, [input]);
 
-  // 메시지 전송
   const handleSend = async () => {
-    if (!input.trim() || !roomId || !studentId || !facultyId || sending) return;
-    setSending(true);
-    await supabase.from("faculty_student_chats").insert({
-      fk_room_id: roomId,
-      fk_student_id: studentId,
-      fk_faculty_id: facultyId,
-      sender_role: "student",
-      message: input,
-      created_at: new Date(),
-      // referenced_message_id: referencedMessage?.id || null, // 제거
-    });
+    if (!input.trim() || !roomId || !studentId || !facultyId || sending) {
+      // console.log("Cannot send message:", {
+      //   hasInput: !!input.trim(),
+      //   roomId,
+      //   studentId,
+      //   facultyId,
+      //   sending,
+      // });
+      return;
+    }
+
+    const message = input.trim();
+    // console.log("Sending message:", { roomId, studentId, facultyId, message });
     setInput("");
-    // clearReferencedMessage(); // 제거
+    setSending(true);
+
+    const { data, error } = await supabase
+      .from("faculty_student_chats")
+      .insert({
+        fk_room_id: roomId,
+        fk_student_id: studentId,
+        fk_faculty_id: facultyId,
+        sender_role: "student",
+        message: message,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("메시지 전송 실패:", error);
+    } else if (data) {
+      // console.log("Message sent successfully:", data);
+      // 실시간 구독에서 자동으로 추가되므로 로컬 상태 업데이트 제거
+      // setChats((prev) => [...prev, data]);
+    }
     setSending(false);
   };
 
-  // 엔터(shift+enter 제외)로 전송
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
   };
 
   useEffect(() => {
-    // 교수자 메시지 중 참조 메시지 id만 모아서 fetch
     async function fetchReferencedMessages() {
       if (!chats.length) return;
       const refIds = chats
@@ -195,9 +241,8 @@ export default function InstructorChatTab({
         .map((chat) => chat.referenced_message_id)
         .filter((id, idx, arr) => id && arr.indexOf(id) === idx);
       if (refIds.length === 0) return;
-      const supabase = createClient();
       const { data } = await supabase
-        .from("chats") // 반드시 chats 테이블에서 가져오도록 수정
+        .from("chats")
         .select("id, message, role")
         .in("id", refIds);
       if (data) {
@@ -211,171 +256,172 @@ export default function InstructorChatTab({
     fetchReferencedMessages();
   }, [chats]);
 
-  // 교수자 승인 여부 확인
   const [isInstructorAccepted, setIsInstructorAccepted] =
     useState<boolean>(false);
   useEffect(() => {
     async function checkInstructorAccepted() {
-      if (!roomId || !facultyId) return;
+      if (!roomId) return;
       const { data } = await supabase
         .from("invite")
         .select("state")
         .eq("fk_room_id", roomId)
-        .eq("fk_user_faculty_id", facultyId)
         .single();
       setIsInstructorAccepted(!!data?.state);
     }
     checkInstructorAccepted();
-  }, [roomId, facultyId]);
+  }, [roomId]);
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex flex-col flex-1 min-h-0 p-4 gap-3">
-        {selectedRoom?.state === 2 ||
-        selectedRoom?.state === 3 ||
-        selectedRoom?.state === 4 ||
-        selectedRoom?.state === 5 ? (
-          selectedRoom?.state === 2 && !isInstructorAccepted ? (
-            <div className="flex flex-1 items-center justify-center text-gray-400 text-lg font-semibold">
-              Waiting for the instructor to accept your request
-            </div>
-          ) : (
-            <>
-              <div
-                ref={containerRef}
-                className="flex-1 min-h-0 overflow-y-auto"
-              >
-                {loading ? (
-                  <div className="text-gray-400 text-center">Loading...</div>
-                ) : chats.length === 0 ? (
-                  <div className="flex flex-col items-center mt-10">
-                    <Image
-                      src="/ic-approval.png"
-                      width={200}
-                      height={100}
-                      alt="no-chats"
-                    />
-                    <div className="font-bold text-[16px] mt-4 text-gray-500">
-                      No instructor chats yet.
-                    </div>
+      <div
+        className="flex flex-col flex-1 min-h-0 p-4 gap-3"
+        style={{ height: "calc(100vh - 200px)" }}
+      >
+        {selectedRoom?.state === 2 && !isInstructorAccepted ? (
+          <div className="flex flex-1 items-center justify-center text-gray-400 text-lg font-semibold">
+            Waiting for the instructor to accept your request
+          </div>
+        ) : isInstructorAccepted ? (
+          <>
+            <div
+              ref={containerRef}
+              className="flex-1 min-h-0 overflow-y-auto"
+              style={{ maxHeight: "calc(100vh - 280px)" }}
+            >
+              {loading ? (
+                <div className="text-gray-400 text-center">Loading...</div>
+              ) : chats.length === 0 ? (
+                <div className="flex flex-col items-center mt-10">
+                  <Image
+                    src="/ic-approval.png"
+                    width={200}
+                    height={100}
+                    alt="no-chats"
+                  />
+                  <div className="font-bold text-[16px] mt-4 text-gray-500">
+                    No instructor chats yet.
                   </div>
-                ) : (
-                  chats.map((chat: Chat) => {
-                    if (chat.sender_role === "system") {
-                      return (
-                        <div
-                          key={chat.id}
-                          className="text-center text-gray-400 my-2"
-                        >
-                          {chat.message}
-                        </div>
-                      );
-                    }
-                    const isStudent = chat.sender_role === "student";
-                    const referenced =
-                      chat.sender_role === "faculty" &&
-                      chat.referenced_message_id
-                        ? referencedMessages[chat.referenced_message_id]
-                        : null;
+                </div>
+              ) : (
+                chats.map((chat: Chat, index: number) => {
+                  if (chat.sender_role === "system") {
                     return (
                       <div
-                        key={chat.id}
-                        ref={(el) => {
-                          messageRefs.current[chat.id] = el;
-                        }}
-                        className={`flex items-end gap-1 my-2 ${
-                          isStudent ? "justify-end" : "justify-start"
-                        }`}
+                        key={`${chat.id}-${index}`}
+                        className="text-center text-gray-400 my-2"
                       >
-                        {isStudent ? (
-                          <div className="flex items-end ml-10">
-                            <div className="flex items-center gap-2 my-1 mr-3">
-                              <span className="text-[10px] text-gray-400 min-w-[32px] text-right">
+                        {chat.message}
+                      </div>
+                    );
+                  }
+                  const isStudent = chat.sender_role === "student";
+                  const referenced =
+                    chat.sender_role === "faculty" && chat.referenced_message_id
+                      ? referencedMessages[chat.referenced_message_id]
+                      : null;
+                  return (
+                    <div
+                      key={`${chat.id}-${index}`}
+                      ref={(el) => {
+                        messageRefs.current[chat.id] = el;
+                      }}
+                      className={`flex items-end gap-1 my-2 ${
+                        isStudent ? "justify-end" : "justify-start"
+                      }`}
+                    >
+                      {isStudent ? (
+                        <div className="flex items-end ml-10">
+                          <div className="flex items-center gap-2 my-1 mr-3">
+                            <span className="text-[10px] text-gray-400 min-w-[32px] text-right">
+                              {formatChatTimestamp(chat.created_at).time}
+                            </span>
+                          </div>
+                          <div className="rounded-xl px-4 py-3 whitespace-pre-line text-sm bg-[#EDEEFC] text-gray-800">
+                            {chat.message}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-end">
+                          <div className="rounded-xl px-4 py-3 whitespace-pre-line text-sm bg-[#d3d5fc] text-gray-800">
+                            {referenced && (
+                              <div
+                                className="mb-2 p-2 bg-gray-50 rounded-lg border-l-2 border-blue-400 cursor-pointer"
+                                onClick={() => {
+                                  const ref = (window as any).gptMessageRefs?.[
+                                    referenced.id
+                                  ];
+                                  if (ref && ref.current) {
+                                    ref.current.scrollIntoView({
+                                      behavior: "smooth",
+                                      block: "center",
+                                    });
+                                  }
+                                }}
+                              >
+                                <div className="text-xs text-gray-500 mb-1">
+                                  참조:{" "}
+                                  {referenced.role === "user"
+                                    ? "학생"
+                                    : referenced.role === "assistant"
+                                    ? "GPT"
+                                    : referenced.role}
+                                </div>
+                                <div className="text-xs text-gray-700 line-clamp-2">
+                                  {referenced.message}
+                                </div>
+                              </div>
+                            )}
+                            {chat.message}
+                          </div>
+                          <div className="flex flex-col items-start ml-3">
+                            <div className="flex items-center gap-2 my-1">
+                              <span className="text-[10px] text-gray-400 min-w-[32px] text-left">
                                 {formatChatTimestamp(chat.created_at).time}
                               </span>
                             </div>
-                            <div className="rounded-xl px-4 py-3 whitespace-pre-line text-sm bg-[#EDEEFC] text-gray-800">
-                              {chat.message}
-                            </div>
                           </div>
-                        ) : (
-                          <div className="flex items-end">
-                            <div className="rounded-xl px-4 py-3 whitespace-pre-line text-sm bg-[#d3d5fc] text-gray-800">
-                              {referenced && (
-                                <div
-                                  className="mb-2 p-2 bg-gray-50 rounded-lg border-l-2 border-blue-400 cursor-pointer"
-                                  onClick={() => {
-                                    const ref = (window as any)
-                                      .gptMessageRefs?.[referenced.id];
-                                    if (ref && ref.current) {
-                                      ref.current.scrollIntoView({
-                                        behavior: "smooth",
-                                        block: "center",
-                                      });
-                                    }
-                                  }}
-                                >
-                                  <div className="text-xs text-gray-500 mb-1">
-                                    참조:{" "}
-                                    {referenced.role === "user"
-                                      ? "학생"
-                                      : referenced.role === "assistant"
-                                      ? "GPT"
-                                      : referenced.role}
-                                  </div>
-                                  <div className="text-xs text-gray-700 line-clamp-2">
-                                    {referenced.message}
-                                  </div>
-                                </div>
-                              )}
-                              {chat.message}
-                            </div>
-                            <div className="flex flex-col items-start ml-3">
-                              <div className="flex items-center gap-2 my-1">
-                                <span className="text-[10px] text-gray-400 min-w-[32px] text-left">
-                                  {formatChatTimestamp(chat.created_at).time}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-              {/* state가 4가 아닐 때만 입력창 노출 */}
-              {selectedRoom?.state !== 4 && (
-                <div className="flex-shrink-0">
-                  <div className="px-2 py-2 bg-white border-t border-gray-100">
-                    <div className="w-full border border-gray-300 rounded-xl px-3 py-2 flex flex-col bg-white">
-                      <textarea
-                        ref={textareaRef}
-                        rows={1}
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        placeholder="메시지를 입력하세요..."
-                        className="w-full resize-none overflow-y-auto text-sm focus:outline-none max-h-[60px] mb-3 bg-white"
-                        style={{ lineHeight: "20px" }}
-                        disabled={sending}
-                      />
-                      <div className="flex justify-end">
-                        <div
-                          className={`text-sm px-3 py-1 rounded-xl bg-[#816eff] hover:bg-[#6B50FF] text-white cursor-pointer ${
-                            sending ? "opacity-50 pointer-events-none" : ""
-                          }`}
-                          onClick={handleSend}
-                        >
-                          Send
                         </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+            {selectedRoom?.state !== 4 && (
+              <div className="flex-shrink-0 mt-auto">
+                <div className="px-2 py-1 bg-white border-t border-gray-100">
+                  <div className="w-full border border-gray-300 rounded-xl px-3 py-2 flex flex-col bg-white">
+                    <textarea
+                      ref={textareaRef}
+                      rows={1}
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      placeholder="Type a message..."
+                      className="w-full resize-none overflow-y-auto text-sm focus:outline-none max-h-[60px] mb-3 bg-white"
+                      style={{ lineHeight: "20px" }}
+                      disabled={sending}
+                    />
+                    <div className="flex justify-end">
+                      <div
+                        className={`text-sm px-3 py-1 rounded-xl bg-[#816eff] hover:bg-[#6B50FF] text-white cursor-pointer ${
+                          sending ? "opacity-50 pointer-events-none" : ""
+                        }`}
+                        onClick={handleSend}
+                      >
+                        Send
                       </div>
                     </div>
                   </div>
                 </div>
-              )}
-            </>
-          )
+              </div>
+            )}
+            {selectedRoom?.state === 4 && (
+              <div className="text-center text-gray-500 text-sm mt-2 p-2 bg-gray-50 rounded-lg">
+                This learning session has been ended.
+              </div>
+            )}
+          </>
         ) : (
           <div className="flex flex-1 items-center justify-center text-gray-400 text-lg font-semibold">
             Reach the Sprout Stage to start matching.

@@ -47,12 +47,10 @@ export default function ChallengeModal({
   // 챌린지 모드 첫 진입 시 초기 데이터 전송
   const sendInitialChallengeData = async () => {
     if (!selectedRoom?.id) return;
-
-    // 이미 초기화되었는지 확인하고 즉시 플래그 설정
     if (hasInitialized) return;
     setHasInitialized(true);
 
-    // 1. 기존 일반 채팅 내용 가져오기
+    // 1. 최근 일반 채팅 내용 가져오기
     const { data: existingChats } = await supabase
       .from("chats")
       .select("*")
@@ -60,21 +58,22 @@ export default function ChallengeModal({
       .order("created_at", { ascending: true })
       .limit(20); // 최근 20개 메시지만
 
-    // 2. 학습계획서 가져오기
+    // 2. 학습계획서 가져오기 (참고추천자료 제외)
     const planData = selectedRoom.plan;
 
     // 3. 초기 컨텍스트 메시지 생성
     let contextMessage =
-      "챌린지 모드에 진입했습니다. 다음 정보를 바탕으로 도전적인 질문을 해주세요:\n\n";
+      "Challenge Mode is on! Try teaching LearnMate what you've learned so far.\n\n";
 
-    // 학습계획서 정보 추가
+    // 학습계획서 정보 추가 (참고추천자료 제외)
     if (planData) {
       contextMessage += "📋 **학습계획서 정보:**\n";
       contextMessage += `- 프로젝트명: ${planData.project_name}\n`;
       contextMessage += `- 프로젝트 설명: ${planData.project_description}\n`;
-      contextMessage += `- 추천 학습 자료: ${planData.recommended_learning_materials?.join(
-        ", "
-      )}\n\n`;
+      if (planData.learning_objectives) {
+        contextMessage += `- 학습 목표: ${planData.learning_objectives}\n`;
+      }
+      contextMessage += "\n";
     }
 
     // 기존 대화 내용 추가
@@ -88,22 +87,38 @@ export default function ChallengeModal({
     }
 
     contextMessage +=
-      "이제 위의 정보를 바탕으로 학생의 이해도를 테스트하고 심화 학습을 도울 수 있는 도전적인 질문이나 문제를 제시해주세요.";
+      "Now, based on the information above, ask a challenging question or give a task to test LearnMate AI's understanding and to support deeper learning.";
 
-    // 초기 컨텍스트 메시지를 챌린지 채팅에 저장
-    const { data: contextChat } = await supabase
-      .from("challenge_chats")
-      .insert({
+    // 4. 챗봇 4에게 초기 컨텍스트 전송 (메시지로 표시하지 않고 백그라운드에서 처리)
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_NODE_BASE_URL}/message`,
+        {
+          userMessage: contextMessage,
+          threadId: selectedRoom.bot4_thread_id || "",
+          type: 4,
+        }
+      );
+
+      // 5. 챗봇 4의 응답을 챌린지 채팅에 저장
+      if (response.data && response.data.message) {
+        await supabase.from("challenge_chats").insert({
+          fk_user_id: selectedRoom.fk_user_id,
+          fk_room_id: selectedRoom.id,
+          role: "assistant",
+          message: response.data.message,
+        });
+      }
+    } catch (error) {
+      console.error("챗봇 4 초기화 실패:", error);
+      // 에러 시 기본 메시지라도 표시
+      await supabase.from("challenge_chats").insert({
         fk_user_id: selectedRoom.fk_user_id,
         fk_room_id: selectedRoom.id,
         role: "assistant",
-        message: contextMessage,
-      })
-      .select()
-      .single();
-
-    if (contextChat) {
-      addChallengeChat(contextChat);
+        message:
+          "Challenge Mode is on! Try teaching LearnMate what you've learned so far.",
+      });
     }
   };
 
@@ -244,29 +259,31 @@ export default function ChallengeModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed z-50 top-0 left-0 h-full w-full bg-[#00000064] flex justify-center items-center">
-      <div className="w-[900px] h-[800px] bg-white rounded-xl flex flex-col">
+    <div className="fixed z-50 top-0 left-0 h-full w-full bg-[#00000064] flex justify-center items-center p-2 sm:p-4">
+      <div className="w-full max-w-[900px] h-full max-h-[800px] bg-white rounded-xl flex flex-col">
         {/* 헤더 */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gradient-to-r from-[#816eff]/10 to-[#6B50FF]/10">
-          <div className="flex items-center gap-3">
-            <div className="text-3xl animate-pulse">🔥</div>
-            <div>
-              <h2 className="text-xl font-bold text-gray-800">
+        <div className="flex justify-between items-center p-3 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-[#816eff]/10 to-[#6B50FF]/10">
+          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+            <div className="text-2xl sm:text-3xl animate-pulse flex-shrink-0">
+              🔥
+            </div>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-800 truncate">
                 Challenge Mode
               </h2>
-              <p className="text-sm text-gray-600">
+              <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">
                 {selectedRoom?.isChallenge
-                  ? "Challenge mode is active! Test your knowledge with advanced questions."
+                  ? "Now it's your turn to teach. Help LearnMate learn from you!"
                   : "Test your knowledge and skills with advanced questions"}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-1 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
           >
             <svg
-              className="w-6 h-6 text-gray-500"
+              className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -321,7 +338,30 @@ export default function ChallengeModal({
             <div className="flex items-center gap-3 text-[#816eff] bg-[#816eff]/10 border border-[#816eff]/20 rounded-lg p-3">
               <div className="h-5 w-5 animate-spin rounded-full border-2 border-t-transparent border-[#816eff]" />
               <span className="text-sm font-medium">
-                AI is analyzing your challenge...
+                {
+                  [
+                    "LearnMate is cooking up a smart reply...",
+                    "Give me a sec... I'm learning from your challenge!",
+                    "Crunching your challenge... with brain power!",
+                    "Your challenge has been accepted. Let me think...",
+                    "Thinking hard… because your challenge is a tough one!",
+                    "Beep boop... loading some smart thoughts!",
+                    "Downloading brainpower… please wait!",
+                    "One moment… your challenge made me think twice!",
+                    "Hold on, my brain just went on a coffee break... again.",
+                    "Teaching mode: activated. Common sense: still loading...",
+                    "Wait, which subject are we teaching again? Oh, right... everything!",
+                    "Currently fighting off squirrels in my neural network.",
+                    "Oops, I tried to take notes but got distracted by a dancing pixel.",
+                    "Hold tight, my imaginary assistant is assembling the lesson plans.",
+                    "Downloading your genius... oh no, it’s mostly cat videos.",
+                    "I swear I understood that... give me five more seconds to pretend.",
+                    "Warning: brain cells partying. Learning is currently 73% confused.",
+                    "Recalculating... turns out knowledge is slippery like a greased penguin.",
+                  ].map((msg) => msg.replace(/"/g, ""))[
+                    Math.floor(Math.random() * 17)
+                  ]
+                }
               </span>
             </div>
           )}

@@ -310,14 +310,14 @@ export default function ChallengeModal({
                 Challenge Mode
               </h3>
               <p className="text-gray-600 max-w-md mb-4">
-                Ready to test your knowledge? Ask challenging questions, solve
-                complex problems, and push your limits!
+                Ready to switch roles? It’s your turn to teach what you’ve
+                learned — explain and go deeper!
               </p>
               <div className="bg-[#816eff]/10 border border-[#816eff]/20 rounded-lg p-4 max-w-md">
                 <p className="text-sm text-[#816eff]">
-                  💡 <strong>Tip:</strong> Try asking questions like "Explain
-                  this concept in detail" or "What are the advanced applications
-                  of this topic?"
+                  💡 <strong>Tip:</strong> Try prompts like “Let me teach you
+                  about this concept” or “Here’s how I understand it — does it
+                  make sense?”
                 </p>
               </div>
             </div>
@@ -378,7 +378,7 @@ export default function ChallengeModal({
               onKeyDown={handleKeyDown}
               onCompositionStart={() => setIsComposing(true)}
               onCompositionEnd={() => setIsComposing(false)}
-              placeholder="Ask a challenging question, solve a complex problem, or request advanced explanations..."
+              placeholder="Type a message..."
               className="w-full resize-none overflow-y-auto text-sm focus:outline-none max-h-[60px] mb-3"
               style={{ lineHeight: "20px" }}
               disabled={!selectedRoom?.room_state || isLoading}

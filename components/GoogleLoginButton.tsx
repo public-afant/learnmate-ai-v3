@@ -73,7 +73,7 @@ const GoogleLoginButton = ({
       className="w-[22rem] h-12 mt-3 rounded-[10px] flex justify-center items-center cursor-pointer border-2 border-gray-100 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
     >
       <Image
-        src="/g-icon.png"
+        src="/social-1.png"
         alt="Google"
         width={20}
         height={20}

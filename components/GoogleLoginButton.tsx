@@ -73,10 +73,11 @@ const GoogleLoginButton = ({
     >
       <img
         src="/social-1.png"
-        alt="Google"
+        alt="G"
         width={20}
         height={20}
         className="mr-1.5"
+        style={{ width: "auto", height: "auto" }}
       />
       <span className="text-gray-600 font-semibold">
         {isLoading ? "로그인 중..." : "Sign in with Google"}

@@ -11,6 +11,7 @@ export default async function UserInfo() {
   let code = "";
   let hasEmail = false;
   let userId = "";
+  let isViewer = false;
 
   if (token) {
     try {
@@ -18,6 +19,7 @@ export default async function UserInfo() {
       name = parsed.name;
       role = parsed.role;
       userId = parsed.id;
+      isViewer = parsed.isViewer || false;
 
       // Fetch the user's code and email from the database
       const supabase = await createClient();
@@ -42,7 +44,7 @@ export default async function UserInfo() {
   return (
     <div className="h-[60px] flex items-center mx-10 min-w-[200px] justify-end">
       {isStudent && code && (
-        <UserCodeTag initialCode={code} userId={userId} hasEmail={hasEmail} />
+        <UserCodeTag initialCode={code} userId={userId} hasEmail={hasEmail} isViewer={isViewer} />
       )}
       <span className="text-sm">Welcome,</span>
       <span className="font-semibold pl-1 text-sm">{name}</span>

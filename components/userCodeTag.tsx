@@ -7,10 +7,12 @@ export default function UserCodeTag({
   initialCode,
   userId,
   hasEmail,
+  isViewer,
 }: {
   initialCode: string;
   userId: string;
   hasEmail: boolean;
+  isViewer?: boolean;
 }) {
   const [code, setCode] = useState(initialCode);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -104,7 +106,7 @@ export default function UserCodeTag({
           )}
         </button>
 
-        {hasEmail && (
+        {hasEmail && !isViewer && (
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}

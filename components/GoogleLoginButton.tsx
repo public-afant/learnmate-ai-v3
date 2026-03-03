@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 
 interface GoogleLoginButtonProps {
   onSuccess?: (email: string) => void;
@@ -72,13 +71,12 @@ const GoogleLoginButton = ({
       disabled={isLoading}
       className="w-[22rem] h-12 mt-3 rounded-[10px] flex justify-center items-center cursor-pointer border-2 border-gray-100 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
     >
-      <Image
+      <img
         src="/social-1.png"
         alt="Google"
         width={20}
         height={20}
         className="mr-1.5"
-        unoptimized
       />
       <span className="text-gray-600 font-semibold">
         {isLoading ? "로그인 중..." : "Sign in with Google"}

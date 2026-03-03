@@ -2,7 +2,7 @@ import ChatPanel from "./chatPanel";
 import LeftPanel from "./(left)/leftPanel";
 import RightPanel from "./rightPanel";
 
-export default function Layout() {
+export default function Layout({ isViewer }: { isViewer?: boolean }) {
   return (
     <div className="flex h-[calc(100dvh-100px)] overflow-hidden">
       {/* Left Panel */}
@@ -12,11 +12,11 @@ export default function Layout() {
 
       {/* Chat Panel */}
       <div className="flex-1 h-full min-w-[330px]">
-        <ChatPanel />
+        <ChatPanel isViewer={isViewer} />
       </div>
 
       {/* Right Panel */}
-      <RightPanel />
+      <RightPanel isViewer={isViewer} />
     </div>
   );
 }

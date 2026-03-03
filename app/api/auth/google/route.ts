@@ -116,6 +116,29 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // 계정 활성 상태 검사 (state 값이 false 이거나 "inactive" 인지 체크)
+    if (user.state === false || user.state === "inactive") {
+      return new NextResponse(
+        `
+        <html>
+          <body>
+            <script>
+              alert('Your account has been suspended or deactivated by an administrator. Please contact support.');
+              if (window.opener) {
+                window.close();
+              } else {
+                window.location.href = '/';
+              }
+            </script>
+          </body>
+        </html>
+      `,
+        {
+          headers: { "Content-Type": "text/html" },
+        }
+      );
+    }
+
     // 쿠키에 사용자 정보 저장
     const tokenData = {
       id: user.id,

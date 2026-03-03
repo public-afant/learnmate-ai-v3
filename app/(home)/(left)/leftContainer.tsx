@@ -43,16 +43,21 @@ export default function LeftContainer({ token }) {
   //   getRoomList(true);
   // }, [selectedRoom]);
 
+  const tokenData = JSON.parse(token?.value ?? "{}");
+  const isViewer = tokenData.isViewer === true;
+
   return (
     <div className=" min-w-[250px] max-w-[250px] p-1">
       <div className="flex justify-between p-3">
         <div className="text-[14px] font-bold flex items-center">
           My Learning Spaces
         </div>
-        <CreateModal
-          userId={JSON.parse(token?.value ?? "").id}
-          getRoomList={getRoomList}
-        />
+        {!isViewer && (
+          <CreateModal
+            userId={tokenData.id}
+            getRoomList={getRoomList}
+          />
+        )}
       </div>
       <RoomList token={token} rooms={rooms} getRoomList={getRoomList} />
     </div>

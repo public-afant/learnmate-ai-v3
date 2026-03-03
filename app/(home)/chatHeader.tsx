@@ -38,7 +38,8 @@ export default function ChatHeader() {
         >
           {selectedRoom?.title}
         </h1>
-        {(selectedRoom?.state === 3 ||
+        {/* 
+        (selectedRoom?.state === 3 ||
           selectedRoom?.state === 4 ||
           selectedRoom?.state === 5) && (
           <button
@@ -63,7 +64,8 @@ export default function ChatHeader() {
           >
             🔥 Challenge
           </button>
-        )}
+        )
+        */}
       </div>
 
       <div className="flex items-center gap-2">

@@ -7,7 +7,7 @@ import NoteTab from "./(right)/noteTab";
 import { useRoomStore } from "@/store/roomStore";
 import InstructorChatTab from "./(right)/instructorChatTab";
 
-export default function RightPanel() {
+export default function RightPanel({ isViewer }: { isViewer?: boolean }) {
   const { showRight } = useRightPanelStore();
   const [rightWidth, setRightWidth] = useState(750);
   const [resizing, setResizing] = useState<"right" | null>(null);
@@ -33,11 +33,13 @@ export default function RightPanel() {
     };
   }, [resizing, showRight]);
 
-  const TABS = [
-    { key: "plan", label: "Learning Plan" },
-    { key: "note", label: "Learning Notes" },
-    { key: "chat", label: "Instructor Chat", badge: "" },
-  ];
+  const TABS = isViewer
+    ? [{ key: "plan", label: "Learning Plan" }]
+    : [
+        { key: "plan", label: "Learning Plan" },
+        { key: "note", label: "Learning Notes" },
+        { key: "chat", label: "Instructor Chat", badge: "" },
+      ];
 
   return (
     <>

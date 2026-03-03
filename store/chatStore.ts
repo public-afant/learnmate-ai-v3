@@ -3,7 +3,7 @@ import { create } from "zustand";
 type Chat = {
   id: string;
   role: "user" | "assistant";
-  content: string;
+  message: string;
   fk_room_id: string;
   created_at: string;
   json: object;

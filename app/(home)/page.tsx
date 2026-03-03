@@ -9,5 +9,15 @@ export default async function Home() {
     redirect("/login");
   }
 
-  return <Layout />;
+  let isViewer = false;
+  try {
+    const parsed = JSON.parse(token.value);
+    if (parsed.isViewer === true) {
+      isViewer = true;
+    }
+  } catch (e) {
+    console.error("Token parse error", e);
+  }
+
+  return <Layout isViewer={isViewer} />;
 }

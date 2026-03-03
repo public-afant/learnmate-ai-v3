@@ -23,7 +23,7 @@ export default function LoginForm() {
         router.push("/");
       }
     } else {
-      alert("인증 실패!");
+      alert(res?.error || "Your account has been suspended or deactivated by an administrator. Please contact support.");
     }
   };
 

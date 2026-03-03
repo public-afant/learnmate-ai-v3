@@ -11,7 +11,7 @@ import { useState, useRef, useEffect } from "react";
 
 const supabase = createClient();
 
-export default function ChatInput({ setIsLoading, isLoading }) {
+export default function ChatInput({ setIsLoading, isLoading, isViewer }: { setIsLoading: any, isLoading: boolean, isViewer?: boolean }) {
   // const [isNext, setIsNext] = useState(false);
   const [nextModal, setNextModal] = useState(false);
   const [challengeModal, setChallengeModal] = useState(false);
@@ -53,6 +53,7 @@ export default function ChatInput({ setIsLoading, isLoading }) {
   }, []);
 
   const handleSend = async () => {
+    if (isViewer) return;
     if (!selectedRoom?.room_state || !message.trim()) return;
 
     const content = message.trim();
@@ -98,13 +99,18 @@ export default function ChatInput({ setIsLoading, isLoading }) {
         type: idx,
       }
     );
+    console.log("GPT Data from Server:", data);
 
-    // console.log(data);
+    if (data.isNext !== undefined) {
+      let strictIsNext = false;
+      if (data.isNext === true || data.isNext === "true") {
+        strictIsNext = true;
+      }
 
-    if (data.isNext) {
+
       const { data: updateResult } = await supabase
         .from("rooms")
-        .update({ is_next: data.isNext })
+        .update({ is_next: strictIsNext })
         .eq("id", selectedRoom?.id)
         .select(`*,note(*)`)
         .single();
@@ -133,14 +139,24 @@ export default function ChatInput({ setIsLoading, isLoading }) {
     //   setSelectedRoom(result1);
     // }
 
-    const { data: gptData } = await supabase
+    const gptMessageText = data.assistantMessage || data.assistant || "Finished processing.";
+    let payloadJson = data.plan || data.json || null;
+    
+    // 신규 리포트 양식인 경우, 최상단 객체들을 전부 모아서 json으로 저장합니다.
+    if (!payloadJson && data.projectIdentity) {
+      payloadJson = { ...data };
+      delete payloadJson.threadId;
+      delete payloadJson.assistantMessage;
+    }
+
+    const { data: gptData, error } = await supabase
       .from("chats")
       .insert({
         fk_user_id: selectedRoom?.fk_user_id,
         fk_room_id: selectedRoom?.id,
         role: "assistant",
-        message: data.assistant,
-        json: data.plan,
+        message: gptMessageText,
+        json: payloadJson,
       })
       .select()
       .single();
@@ -205,7 +221,9 @@ export default function ChatInput({ setIsLoading, isLoading }) {
           onCompositionStart={() => setIsComposing(true)} // ⬅️ 조합 시작
           onCompositionEnd={() => setIsComposing(false)} // ⬅️ 조합 종료
           placeholder={
-            selectedRoom?.state === 4 || selectedRoom?.state === 5
+            isViewer
+              ? "뷰어 모드입니다. (채팅 권한 없음)"
+              : selectedRoom?.state === 4 || selectedRoom?.state === 5
               ? "학습이 종료되었습니다."
               : "Type a message..."
           }
@@ -215,7 +233,8 @@ export default function ChatInput({ setIsLoading, isLoading }) {
             !selectedRoom?.room_state ||
             isLoading ||
             selectedRoom?.state === 4 ||
-            selectedRoom?.state === 5
+            selectedRoom?.state === 5 ||
+            isViewer
           }
         />
 
@@ -224,6 +243,7 @@ export default function ChatInput({ setIsLoading, isLoading }) {
             {selectedRoom?.is_next && (
               <div
                 onClick={() => {
+                  if (isViewer) return;
                   if (selectedRoom?.is_next) {
                     if (selectedRoom.state === 1) {
                       setNextModal(true);
@@ -234,7 +254,7 @@ export default function ChatInput({ setIsLoading, isLoading }) {
                   }
                 }}
                 className={`text-sm px-3 py-1 rounded-xl ${
-                  selectedRoom?.is_next
+                  selectedRoom?.is_next && !isViewer
                     ? "bg-[#816eff] hover:bg-[#6B50FF] text-white cursor-pointer"
                     : "bg-gray-400 text-gray-200 cursor-not-allowed"
                 }`}
@@ -246,6 +266,7 @@ export default function ChatInput({ setIsLoading, isLoading }) {
           <div
             onClick={() => {
               if (
+                !isViewer &&
                 !isLoading &&
                 selectedRoom?.state !== 4 &&
                 selectedRoom?.state !== 5 &&
@@ -260,7 +281,8 @@ export default function ChatInput({ setIsLoading, isLoading }) {
                 !isLoading &&
                 selectedRoom?.state !== 4 &&
                 selectedRoom?.state !== 5 &&
-                message.trim()
+                message.trim() &&
+                !isViewer
                   ? "bg-[#816eff] hover:bg-[#6B50FF] text-white cursor-pointer shadow-md"
                   : "bg-gray-300 text-gray-400 cursor-not-allowed opacity-70"
               }
@@ -270,7 +292,8 @@ export default function ChatInput({ setIsLoading, isLoading }) {
                 isLoading ||
                 selectedRoom?.state === 4 ||
                 selectedRoom?.state === 5 ||
-                !message.trim()
+                !message.trim() ||
+                isViewer
                   ? "none"
                   : "auto",
               transition: "background 0.2s, color 0.2s, opacity 0.2s",

@@ -4,7 +4,7 @@ import ChatHeader from "./chatHeader";
 import ChatMessageContainer from "./chatMessageContainer";
 import ChatInput from "./chatInput";
 
-export default function ChatPanel() {
+export default function ChatPanel({ isViewer }: { isViewer?: boolean }) {
   const [isLoading, setIsLoading] = useState(false);
 
   return (
@@ -25,7 +25,7 @@ export default function ChatPanel() {
               />
             </div>
             <div className="flex-shrink-0 mt-0">
-              <ChatInput setIsLoading={setIsLoading} />
+              <ChatInput setIsLoading={setIsLoading} isLoading={isLoading} isViewer={isViewer} />
             </div>
           </div>
         </div>

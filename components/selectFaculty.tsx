@@ -54,7 +54,19 @@ export default function SelectFaculty({
 
     setSelectedRoom(result);
 
-    handleGPT(JSON.stringify(selectedChat), "", 2);
+    // 챗봇 1의 전체 대화 내역이 아닌, 마지막 Assistant의 요약본(Stage 1 Project Definition)만 추출하여 전달
+    let payload = "";
+    if (selectedChat && selectedChat.length > 0) {
+      // 가장 마지막에 온 assistant 메시지 찾기
+      const lastAssistantChat = [...selectedChat].reverse().find(chat => chat.role === "assistant");
+      if (lastAssistantChat?.message) {
+        payload = lastAssistantChat.message;
+      } else {
+        payload = JSON.stringify(selectedChat); // fallback
+      }
+    }
+
+    handleGPT(payload, "", 2);
     setNextModal(false);
   };
 

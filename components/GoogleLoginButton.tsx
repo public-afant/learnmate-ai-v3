@@ -78,6 +78,7 @@ const GoogleLoginButton = ({
         width={20}
         height={20}
         className="mr-1.5"
+        unoptimized
       />
       <span className="text-gray-600 font-semibold">
         {isLoading ? "로그인 중..." : "Sign in with Google"}

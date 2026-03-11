@@ -8,7 +8,7 @@ export default function PlanTab({ selectedRoom }) {
 
   if (!plan || Object.keys(plan).length === 0) {
     return (
-      <div className="p-6 text-gray-500 text-sm">기록된 프로젝트 요약 리포트나 학습 계획이 없습니다.</div>
+      <div className="p-6 text-gray-500 text-sm">No project summaries or learning plans available.</div>
     );
   }
 

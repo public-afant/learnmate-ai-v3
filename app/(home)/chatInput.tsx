@@ -52,6 +52,18 @@ export default function ChatInput({ setIsLoading, isLoading, isViewer }: { setIs
     // setIsNext(selectedRoom?.is_next ?? false);
   }, []);
 
+  // 메시지 전송 후(로딩 종료 후) 입력창 포커스 유지 처리
+  useEffect(() => {
+    if (
+      !isViewer &&
+      textareaRef.current &&
+      selectedRoom?.state !== 4 &&
+      selectedRoom?.state !== 5
+    ) {
+      textareaRef.current.focus();
+    }
+  }, [isLoading, isViewer, selectedRoom?.state]);
+
   const handleSend = async () => {
     if (isViewer) return;
     if (!selectedRoom?.room_state || !message.trim()) return;
@@ -216,7 +228,14 @@ export default function ChatInput({ setIsLoading, isLoading, isViewer }: { setIs
           ref={textareaRef}
           rows={1}
           value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          onChange={(e) => {
+            let val = e.target.value;
+            // 첫 글자가 소문자 알파벳인 경우 대문자로 자동 변환
+            if (val.length > 0 && /^[a-z]/.test(val)) {
+              val = val.charAt(0).toUpperCase() + val.substring(1);
+            }
+            setMessage(val);
+          }}
           onKeyDown={handleKeyDown}
           onCompositionStart={() => setIsComposing(true)} // ⬅️ 조합 시작
           onCompositionEnd={() => setIsComposing(false)} // ⬅️ 조합 종료
@@ -227,11 +246,10 @@ export default function ChatInput({ setIsLoading, isLoading, isViewer }: { setIs
               ? "학습이 종료되었습니다."
               : "Type a message..."
           }
-          className="w-full resize-none overflow-y-auto text-sm focus:outline-none max-h-[60px] mb-3"
+          className="w-full resize-none overflow-y-auto text-sm focus:outline-none max-h-[60px] mb-3 bg-transparent disabled:opacity-75 disabled:cursor-not-allowed"
           style={{ lineHeight: "20px" }}
-          disabled={
+          readOnly={
             !selectedRoom?.room_state ||
-            isLoading ||
             selectedRoom?.state === 4 ||
             selectedRoom?.state === 5 ||
             isViewer

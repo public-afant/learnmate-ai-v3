@@ -424,7 +424,7 @@ export default function InstructorChatTab({
           </>
         ) : (
           <div className="flex flex-1 items-center justify-center text-gray-400 text-lg font-semibold">
-            Reach the Sprout Stage to start matching.
+            Matching becomes available at the Sprout Stage.
           </div>
         )}
       </div>

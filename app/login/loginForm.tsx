@@ -3,13 +3,16 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { login } from "./actions";
+import GoogleLoginButton from "@/components/GoogleLoginButton";
 
 export default function LoginForm() {
   const [code, setCode] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   const router = useRouter();
 
   const handleLogin = async () => {
+    setError(null);
     const formData = new FormData();
     formData.set("usercode", code);
 
@@ -23,7 +26,7 @@ export default function LoginForm() {
         router.push("/");
       }
     } else {
-      alert(res?.error || "Your account has been suspended or deactivated by an administrator. Please contact support.");
+      setError("Please check again and try.");
     }
   };
 
@@ -48,6 +51,14 @@ export default function LoginForm() {
       >
         <span className="text-[#7D6BE5] font-semibold">Login</span>
       </button>
+      <GoogleLoginButton onError={() => setError("Please check again and try.")} />
+      <div className="h-6 mt-3 flex items-start justify-center">
+        {error && (
+          <span className="text-red-500 text-sm font-medium">
+            {error}
+          </span>
+        )}
+      </div>
     </div>
   );
 }

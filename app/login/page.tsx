@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import LoginForm from "./loginForm";
 import Image from "next/image";
-import GoogleLoginButton from "@/components/GoogleLoginButton";
 
 async function getUser() {
   const cookie = cookies();
@@ -44,8 +43,6 @@ export default async function LoginPage() {
             <div className="text-3xl font-bold text-gray-600">LearnMate AI</div>
 
             <LoginForm />
-
-            <GoogleLoginButton />
           </div>
           <div className="basis-1/2 flex justify-center items-center">
             <Image

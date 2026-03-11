@@ -39,6 +39,13 @@ function ChatInput({ facultyId }: { facultyId: string }) {
     }
   }, [message]);
 
+  // 메시지 전송 후(로딩 종료 후) 입력창 포커스 유지 처리
+  useEffect(() => {
+    if (!sending && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [sending]);
+
   const handleSend = async () => {
     if (!message.trim() || !roomId || !studentId || !facultyId || sending)
       return;
@@ -102,12 +109,19 @@ function ChatInput({ facultyId }: { facultyId: string }) {
           ref={textareaRef}
           rows={1}
           value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          onChange={(e) => {
+            let val = e.target.value;
+            // 첫 글자가 소문자 알파벳인 경우 대문자로 자동 변환
+            if (val.length > 0 && /^[a-z]/.test(val)) {
+              val = val.charAt(0).toUpperCase() + val.substring(1);
+            }
+            setMessage(val);
+          }}
           onKeyDown={handleKeyDown}
-          placeholder="메시지를 입력하세요..."
-          className="w-full resize-none overflow-y-auto text-sm focus:outline-none max-h-[60px] mb-3 bg-white"
+          placeholder="Type a message..."
+          className="w-full resize-none overflow-y-auto text-sm focus:outline-none max-h-[60px] mb-3 bg-transparent disabled:opacity-75 disabled:cursor-not-allowed"
           style={{ lineHeight: "20px" }}
-          disabled={sending}
+          readOnly={sending}
         />
         <div className="flex justify-end">
           <div

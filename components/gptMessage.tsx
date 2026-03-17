@@ -101,6 +101,7 @@ export default function GptMessage({
           json={item.json}
           setIsModal={setIsModal}
           setIsLoading={setIsLoading}
+          date={item.created_at}
         />
       )}
     </div>
@@ -122,10 +123,36 @@ const ConvertFunction = (content) => {
 
 const supabase = createClient();
 
-export function PlanModal({ json, setIsModal, setIsLoading }) {
+export function PlanModal({ json, setIsModal, setIsLoading, date }) {
   const { selectedRoom, setSelectedRoom } = useRoomStore();
   // const { selectedChat } = useChatStore();
   const { addChat } = useChatStore();
+  const [instructorName, setInstructorName] = useState<string>("");
+
+  useEffect(() => {
+    async function fetchInstructor() {
+      if (!selectedRoom?.id) return;
+      const { data: inviteData } = await supabase
+        .from("invite")
+        .select("fk_user_faculty_id")
+        .eq("fk_room_id", selectedRoom.id)
+        .eq("state", true) // Assuming the invite is accepted
+        .single();
+
+      if (inviteData?.fk_user_faculty_id) {
+        const { data: userData } = await supabase
+          .from("users")
+          .select("name")
+          .eq("id", inviteData.fk_user_faculty_id)
+          .single();
+        if (userData) {
+          setInstructorName(userData.name);
+        }
+      }
+    }
+    fetchInstructor();
+  }, [selectedRoom?.id]);
+
   const handleConfirm = async () => {
     // 1. 챗봇 3로 넘어가야함
     // 2. 쓰래드ID 비우기
@@ -237,7 +264,8 @@ export function PlanModal({ json, setIsModal, setIsLoading }) {
                   <div className="text-right text-[13px] text-slate-800 space-y-1">
                     <div><span className="font-bold">Course:</span> CIVIC Project: Korea (2026 Spring)</div>
                     <div><span className="font-bold">System Generation:</span> LearnMate AI 3.1</div>
-                    <div><span className="font-bold">Date:</span> {new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/-/g, '. ')}</div>
+                    <div><span className="font-bold">Instructor:</span> {instructorName || "Not assigned yet"}</div>
+                    <div><span className="font-bold">Date:</span> {new Date(date || new Date()).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/-/g, '. ')}</div>
                   </div>
                 </div>
               </div>

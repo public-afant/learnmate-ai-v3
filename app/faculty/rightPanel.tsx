@@ -22,7 +22,7 @@ function StudentChatListTab({ selectedRoom }: { selectedRoom: any }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const messageRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const { setReferencedMessage } = useReplyStore();
-  const [planModalJson, setPlanModalJson] = useState<any>(null);
+  const [planModalData, setPlanModalData] = useState<{json: any, date: string} | null>(null);
 
   // 메시지로 스크롤하는 함수
   const scrollToMessage = (messageId: string) => {
@@ -124,7 +124,7 @@ function StudentChatListTab({ selectedRoom }: { selectedRoom: any }) {
                       </ReactMarkdown>
                       {chat.json && (
                         <div
-                          onClick={() => setPlanModalJson(chat.json)}
+                          onClick={() => setPlanModalData({ json: chat.json, date: chat.created_at })}
                           className="cursor-pointer mt-2 px-2 py-1 rounded-sm bg-[#816eff] hover:bg-[#6B50FF] text-white text-sm inline-block"
                         >
                           Show Plan
@@ -154,7 +154,7 @@ function StudentChatListTab({ selectedRoom }: { selectedRoom: any }) {
                     </ReactMarkdown>
                     {chat.json && (
                       <div
-                        onClick={() => setPlanModalJson(chat.json)}
+                        onClick={() => setPlanModalData({ json: chat.json, date: chat.created_at })}
                         className="cursor-pointer mt-2 px-2 py-1 rounded-sm bg-[#816eff] hover:bg-[#6B50FF] text-white text-sm inline-block"
                       >
                         Show Plan
@@ -182,11 +182,12 @@ function StudentChatListTab({ selectedRoom }: { selectedRoom: any }) {
           );
         })}
       </div>
-      {planModalJson && (
+      {planModalData && (
         <PlanModal
-          json={planModalJson}
-          setIsModal={() => setPlanModalJson(null)}
+          json={planModalData.json}
+          setIsModal={() => setPlanModalData(null)}
           hideConfirm={true}
+          date={planModalData.date}
         />
       )}
     </>

@@ -241,9 +241,9 @@ export default function ChatInput({ setIsLoading, isLoading, isViewer }: { setIs
           onCompositionEnd={() => setIsComposing(false)} // ⬅️ 조합 종료
           placeholder={
             isViewer
-              ? "뷰어 모드입니다. (채팅 권한 없음)"
+              ? "Viewer mode (No chat permission)"
               : selectedRoom?.state === 4 || selectedRoom?.state === 5
-              ? "학습이 종료되었습니다."
+              ? "The learning has ended."
               : "Type a message..."
           }
           className="w-full resize-none overflow-y-auto text-sm focus:outline-none max-h-[60px] mb-3 bg-transparent disabled:opacity-75 disabled:cursor-not-allowed"

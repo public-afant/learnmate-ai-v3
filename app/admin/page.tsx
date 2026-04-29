@@ -39,8 +39,8 @@ export default async function AdminTestPage() {
   const students = users?.filter((user) => user.role !== "admin" && user.role !== "faculty") || [];
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800">
-      <div className="w-full">
+    <div className="h-[calc(100vh-100px)] bg-gray-50 text-gray-800 overflow-hidden">
+      <div className="h-full">
         
 
 

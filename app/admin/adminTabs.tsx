@@ -3,11 +3,12 @@
 import { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import UserModal from "@/app/components/UserModal";
+import ChatViewer from "./chatViewer";
 
 type User = any; // Assuming 'any' since we don't have types generated
 
 export default function AdminTabs({ admins: initialAdmins, faculties: initialFaculties, students: initialStudents }: { admins: User[], faculties: User[], students: User[] }) {
-  const [activeTab, setActiveTab] = useState<"admin" | "faculty" | "student">("admin");
+  const [activeTab, setActiveTab] = useState<"admin" | "faculty" | "student" | "chat">("admin");
   const [admins, setAdmins] = useState<User[]>(initialAdmins);
   const [faculties, setFaculties] = useState<User[]>(initialFaculties);
   const [students, setStudents] = useState<User[]>(initialStudents);
@@ -178,9 +179,9 @@ export default function AdminTabs({ admins: initialAdmins, faculties: initialFac
   };
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-white text-sm">
+    <div className="flex flex-col md:flex-row h-full bg-white text-sm overflow-hidden">
       {/* Sidebar Menu */}
-      <div className="w-full md:w-60 bg-gray-50 border-b md:border-b-0 md:border-r border-gray-200 p-5 flex-shrink-0">
+      <div className="w-full md:w-60 bg-gray-50 border-b md:border-b-0 md:border-r border-gray-200 p-5 flex-shrink-0 overflow-y-auto">
         <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-5">관리 메뉴</h2>
         <nav className="space-y-2">
           <button
@@ -215,6 +216,17 @@ export default function AdminTabs({ admins: initialAdmins, faculties: initialFac
           >
             학생 목록 <span className="float-right text-[10px] opacity-80 mt-1">{students.length}</span>
           </button>
+
+          <button
+            onClick={() => setActiveTab("chat")}
+            className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-all text-sm ${
+              activeTab === "chat"
+                ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
+          >
+            채팅 조회
+          </button>
         </nav>
       </div>
 
@@ -225,10 +237,12 @@ export default function AdminTabs({ admins: initialAdmins, faculties: initialFac
             {activeTab === "admin" && "관리자 (Admins)"}
             {activeTab === "faculty" && "교수자 (Faculty)"}
             {activeTab === "student" && "학생 (Students)"}
-            
-            <button
+            {activeTab === "chat" && "채팅 조회"}
+
+            {activeTab !== "chat" && (
+              <button
                 onClick={() => {
-                  setEditingRole(activeTab);
+                  setEditingRole(activeTab as "student" | "faculty" | "admin");
                   setEditingUser(null);
                   setIsModalOpen(true);
                 }}
@@ -239,10 +253,14 @@ export default function AdminTabs({ admins: initialAdmins, faculties: initialFac
                 </svg>
                 추가
               </button>
+            )}
           </h3>
         </div>
 
         {/* List UI Table */}
+        {activeTab === "chat" ? (
+          <ChatViewer students={students} />
+        ) : (
         <div className="border border-gray-200 rounded-lg overflow-hidden inline-block w-full max-w-4xl">
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className="bg-gray-50 border-b border-gray-200">
@@ -424,8 +442,9 @@ export default function AdminTabs({ admins: initialAdmins, faculties: initialFac
             </tbody>
           </table>
         </div>
+        )}
       </div>
-      
+
       {/* User Add/Edit Modal */}
       <UserModal
         isOpen={isModalOpen}
